@@ -1,0 +1,219 @@
+{% extends 'tables.html' %}
+{% load static %}
+{% block tittle%}
+    Listado de Ordenes de Compra
+{% endblock tittle%}
+{% block reportes %}
+    <script></script>
+{% endblock reportes %}
+{%block header %}
+
+     <link rel="stylesheet" type="text/css" media="all" href="{%  static 'lib/daterangepicker-master/daterangepicker.css' %}" />
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+
+      <script type="text/javascript" src="{%  static 'lib/daterangepicker-master/daterangepicker.js' %} "></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <link rel="stylesheet" href="{%  static 'reportes/js/reportes.js' %}" />
+    <!--  DATA TABLE OPTIONS-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.js"></script>
+
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
+
+
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.print.min.js"></script>
+    <script>
+    $(function() {
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                responsive: true,
+                destroy: true,
+                ordering: false,
+                searching:false,
+                info: false,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Excel <i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-sucess bnt-flat btn-xs'
+                    },
+                    'copy', 'print'
+                ]
+            });
+        } );
+    });
+    </script>
+
+{%endblock header %}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Requisiciones de Compra
+{%endblock pagename %}
+
+{% block body %}
+<form method="POST">
+            {% csrf_token %}
+                <table class="table">
+                  <thead>
+                    <tr>
+                        <th scope="col">Fechas de Creacion</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Aprobador</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Recursos</th>
+                        <th scope="col">Descripcion</th>
+                        <th scope="col">Estatus</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">
+                          <input autocomplete="False" id="fecha_creacion"  class="form-select form-select-sm" type="text" name="fecha_creacion" value="" />
+                            <script>
+                            $(function() {
+                             $('#fecha_creacion').daterangepicker({
+                                    "autoApply": true,
+                                    locale: {
+                                      format: 'DD-MM-YYYY',
+                                    }
+                                }, function(start, end, label) {
+                                  console.log('New date range selected: ' + start.format('DD-MM-YYYY') + ' to ' + end.format('DD-MM-YYYY') + ' (predefined range: ' + label + ')');
+
+                                });
+                            });
+                            </script>
+                      </th>
+                      <td>
+                          <select name="departamento_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for departamento in departamentos %}
+                                    <option value="{{ departamento.id }}">{{ departamento.nombre }}</option>
+                                {% endfor %}
+                          </select>
+                      </td>
+                      <td>
+                            <select name="aprobador_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for persona in personas %}
+                                    <option value="{{ persona.id }}">{{ persona.nombres }}</option>
+                                {% endfor %}
+                            </select>
+                      </td>
+                      <td>
+                          <select name="producto_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for producto in productos %}
+                                    <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                      </td>
+                     <td>
+                          <select name="recurso_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for recurso in recursos %}
+                                    <option value="{{ recurso.id }}">{{ recurso.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                      </td>
+                     <td>
+                          <input type="text" name="descripcion" class="form-control form-control-sm ">
+                     </td>
+                     <td>
+                          <select name="estatus" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                <option value="pendiente">pendiente</option>
+                                <option value="procesado">procesado</option>
+                                <option value="cancelado">cancelado</option>
+                            </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+            <div align="center">
+                <button class="btn btn-primary" type="reset">Limpiar</button>
+                <button class="btn btn-primary" type="submit"> Buscar</button>
+            </div>
+            </form>
+            <br>
+    {% if ordenes %}
+        <div class="container-fluid" >
+            <h1 class="h3 mb-2 text-gray-800">Reporte de Órdenes de Compra</h1>
+
+
+        </div>
+
+        <div class="card-body" >
+            <div class="table-responsive" >
+                <table class="table table-bordered" name="dataTable" id="dataTable" width="99%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Departamento</th>
+                            <th>Aprobador</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Precio Total</th>
+                            <th>Proveedor</th>
+                            <th>Recursos</th>
+                            <th>Descripcion</th>
+                            <th>Fecha</th>
+                            <th>Estatus</th>
+                            <th>Fecha Estatus</th>
+                            <th># Requerimiento</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ordenes %}
+                            <tr>
+                                <td>{{ orden.id }}</td>
+                                <td>{{ orden.requerimiento_id.departamento_id }}</td>
+                                <td>{{ orden.aprobador_id }}</td>
+                                <td>{{ orden.producto_id }}</td>
+                                <td>{{ orden.cantidad_prod }}</td>
+                                <td>{{ orden.precio_unitario }}</td>
+                                <td>{{ orden.precio_total }}</td>
+                                <td>{{ orden.proveedor_id }}</td>
+                                <td>{{ orden.recursos_id }}</td>
+                                <td>{{ orden.descripcion }}</td>
+                                <td>{{ orden.fecha_creacion }}</td>
+                                <td>{{ orden.estatus }}</td>
+                                <td>{{ orden.fecha_estatus }}</td>
+                                <td>{{ orden.requerimiento_id.id }}</td>
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    {% else %}
+        <div align="center">
+            <h1>No existen datos registrados actualmente</h1>
+        </div>
+    {% endif %}
+
+{% endblock body %}

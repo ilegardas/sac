@@ -1,0 +1,279 @@
+{% extends 'tables.html' %}
+{% load static %}
+{% block tittle%}
+    Listado de Ordenes de Compra
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+{% block reportes %}
+    <script></script>
+{% endblock reportes %}
+{%block header %}
+
+     <link rel="stylesheet" type="text/css" media="all" href="{%  static 'lib/daterangepicker-master/daterangepicker.css' %}" />
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+
+      <script type="text/javascript" src="{%  static 'lib/daterangepicker-master/daterangepicker.js' %} "></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <link rel="stylesheet" href="{%  static 'reportes/js/reportes.js' %}" />
+    <!--  DATA TABLE OPTIONS-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.js"></script>
+
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
+
+
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.print.min.js"></script>
+    <script>
+    $(function() {
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                responsive: true,
+                destroy: true,
+                ordering: true,
+                searching:true,
+                info: false,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Excel <i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-sucess bnt-flat btn-xs'
+                    },
+                    'copy', 'print'
+                ]
+            });
+        } );
+    });
+    </script>
+    <script>
+        $(function() {
+            $(document).ready(function() {
+                $('#dataTable2').DataTable({
+                    responsive: true,
+                    destroy: true,
+                    ordering: true,
+                    searching:true,
+                    info: false,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Excel <i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Excel',
+                            className: 'btn btn-sucess bnt-flat btn-xs'
+                        },
+                        'copy', 'print'
+                    ]
+                });
+            } );
+        });
+        </script>
+
+{%endblock header %}
+{% block pagename %}
+    Ordenes de Compra y Requisiciones
+{%endblock pagename %}
+
+{% block body %}
+        <div class="container">
+            {% if messages %}
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+                  <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+                  <div>
+                    <ul class="messages">
+                        {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                  </div>
+            </div>
+            {% endif %}
+        </div>
+        <button class="btn btn-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom2" aria-controls="offcanvasBottom">Listado de Requisiciones de Compra</button>
+        <br>
+        <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom2" aria-labelledby="offcanvasBottomLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasBottomLabel">Requisiciones de Compra</h5>
+
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+      <div class="offcanvas-body small">
+            En este listado están las requisiciones que están pendientes de generar la orden de compra.
+
+            Las opciones disponibles son generar orden o bien cancelar
+          <br>
+          <strong>ORDEN.</strong> Crea un documento de orden de compra y cambia el estatus del requerimiento a procesando.
+          <br>
+          <strong>CANCELAR.</strong> No elimina el requerimiento, mas bien le cambia el estatus a cancelado por ende aparecerán en los reportes de requisiciones cancelados.
+
+          </div>
+        </div>
+    {% if requisiciones %}
+
+        <div class="card-body" style="width:100%">
+            <div class="table-responsive" >
+                <table class="table table-bordered" id="dataTable" width="99%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Departamento</th>
+                            <th>Producto</th>
+                            <th>Concepto</th>
+                            <th>Descripcion</th>
+                            <th>Fecha de Creacion</th>
+                            <th>Estatus</th>
+                            <th>Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for requisicion in requisiciones %}
+                            <tr>
+                                <td>{{ requisicion.id }}</td>
+                                <td>{{ requisicion.departamento_id }}</td>
+                                <td>{{ requisicion.producto_id }}</td>
+                                <td>{{ requisicion.concepto }}</td>
+                                <td>{{ requisicion.descripcion }}</td>
+                                <td>{{ requisicion.fecha_creacion }}</td>
+                                <td>{{ requisicion.estatus }}</td>
+                                <td align="center">
+                                    <div class="row">
+                                        <div class="col" >
+                                    {% if perms.personas.add_ordencompra %}
+                                    <a href="{% url 'crear_orden' requisicion.id%}" title="Convertir a Orden de Compra" class="btn btn-outline-success btn-sm">
+                                        Orden
+                                    </a>
+                                    {% endif %}
+                                    {% if perms.personas.delete_requisicion %}
+                                    <a href="{% url 'cancelar-requisicion' requisicion.id%}" class="">
+                                        <img title="Cancelar Requerimiento" width="30" height="30" src="{% static 'img/cancel.png' %}" class="img-thumbnail" alt="Cancelar la orden">
+                                    </a>
+                                    {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div align="center">
+            <h1>No existen requerimientos registrados actualmente</h1>
+        </div>
+    {% endif %}
+    <!-- EN ESTA SECCION SE IMPRIMEN LAS ORDENES DE COMPRA PROCESADAS POR EL USUARIO Y SU ESTATUS PENDIENTE -->
+
+        <br>
+        <br>
+        <button class="btn btn-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Listado de Ordenes de Compra</button>
+        <br>
+<br>
+<br>
+        <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasBottomLabel">Ordenes de Compra</h5>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+      <div class="offcanvas-body small">
+            En este listado están las ordenes que están pendientes de comprar (adjuntar una factura) que se han generado por este usuario
+            <br><strong>IMPRIMIR. </strong> Le permite generar el documento para imprimirlo.
+            {% if perms.personas.change_ordencompra %}
+            <br><strong>EDITAR. </strong> Le permite modificar la orden de compra.
+            {% endif %}
+            {% if perms.personas.delete_ordencompra %}
+            <br><strong>CANCELAR.</strong> Se debe seleccionar cuando el requerimiento se ha cancelado definitivamente
+            <br><strong>ELIMINAR.</strong> Este es para eliminar la orden de compra y liberar el requerimiento
+            {% endif %}
+      </div>
+        </div>
+{% if ordenes %}
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable2" width="100%" cellspacing="0">
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Descripcion</th>
+                            <th>Productos</th>
+                            <th>Recurso</th>
+                            <th>Proveedor</th>
+                            <th>Aprobador</th>
+                            <th>Fecha de Creacion</th>
+                            <th>Estatus</th>
+                            <th>Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orden in ordenes %}
+                            <tr>
+                                <td>{{ orden.id }}</td>
+                                <td>{{ orden.descripcion }}</td>
+                                <td>{{ orden.requerimiento_id.producto_id }}</td>
+                                <td>{{ orden.recursos_id }}</td>
+                                <td>{{ orden.proveedor_id }}</td>
+                                <td>{{ orden.aprobador_id }}</td>
+                                <td>{{ orden.fecha_creacion }}</td>
+                                <td>{{ orden.estatus }}</td>
+                                <td>
+
+                                    <div class="row" width="70%">
+
+                                        <div class="col" align="center">
+                                            <a class="btn btn-outline-primary btn-sm" href="javascript:ventanaSecundaria('{% url 'imprimir-orden' orden.id %}')"   >
+                                                <img title="Imprimir Orden - Se ha abierto para imprimir {{ orden.impresa }} veces" width="30" height="30" src="{% static 'img/printer.png' %}" class="img-thumbnail" alt="Generar Orden para Imprimir">
+                                            </a>
+                                             <a class="btn btn-outline-primary btn-sm" href="{% url 'editar_orden' orden.id %}">
+                                                 <img title="Editar Orden" width="30" height="30" src="{% static 'img/edit.png' %}" class="img-thumbnail" alt="Editar los campos de la orden">
+                                             </a>
+                                        </div>
+                                        <div class="col" align="left">
+                                            <a class="" href="{% url 'cancelar-orden' orden.id %}">
+                                                <img title="Cancelar Orden" width="30" height="30" src="{% static 'img/cancel.png' %}" class="img-thumbnail" alt="Cancelar la orden">
+                                            </a>
+
+                                            <a class="" href="{% url 'eliminar_orden' orden.id %}">
+                                                <img title="Eliminar Orden" width="30" height="30" src="{% static 'img/trash.png' %}" class="img-thumbnail" alt="Eliminar la orden">
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <script>
+                        function ventanaSecundaria (URL){
+                           window.open(URL,"ventana1","width=400,height=600,scrollbars=NO")
+                        }
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div align="center">
+            <h1>No existen ordenes de compra registradas actualmente</h1>
+        </div>
+    {% endif %}
+{% endblock body %}

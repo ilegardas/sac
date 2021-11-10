@@ -1,0 +1,61 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Creacion de Compra
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Convertir una orden de compra en Compra
+{%endblock pagename %}
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para convertir Ordenes de Compra a Compras </h1>
+            <p class="mb-4">Usted ah seleccionado una orden de compra para procesarlo como una compra donde puede adjuntar los comprobantes.</p>
+
+            <div align="center"  class="card border-primary mb-3" style="max-width: 90%;">
+              <div class="card-header">Orden No: <strong>{{ orden.id }}</strong></div>
+              <div class="card-body text-primary">
+                  <h5 class="card-title">Concepto: <strong>{{  orden.descripcion }} </strong> </h5>
+                    <p class="card-text">Descripción: <strong> {{  orden.proveedor }} </strong> </p>
+                    <p class="card-text">Producto: <strong> {{  orden.producto_id }} </strong> </p>
+                  <p class="card-text">Monto Total en Orden: <strong> {{  orden.precio_total }} </strong> </p>
+                  <p class="card-text">Recursos y Fecha: <strong> {{  orden.recursos_id }} </strong> del dia <strong> {{  orden.fecha_creacion }} </strong> </p>
+              </div>
+            </div>
+
+
+            <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if error %}
+            <h2>Se produjo un error: {{ error }}</h2>
+        {% else %}
+             <label >Descripción (indique algun texto que le permite reconocer este movimiento)</label>
+            {{ compra_form.descripcion }}
+             <br>
+            <label >Pdf (Aqui suba el comprobante Factura en formato pdf, jpg)</label>
+            {{ compra_form.pdf }}
+             <br>
+            <label >XML (En este por favor cargue el archivo xml )</label>
+            {{ compra_form.xml }}
+            <br>
+            <label >Indique el precio Total:</label>
+            {{ compra_form.Total }}
+             <br>
+            <label >Estatus:</label>
+            {{ compra_form.estatus }}
+             <br>
+
+             <br>
+            <button class="btn btn-primary" type="reset">Limpiar</button>
+            <button class="btn btn-primary" type="submit"> Guardar</button>
+        {% endif  %}
+    </form>
+{% endblock body %}

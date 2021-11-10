@@ -1,0 +1,38 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Alta de Departamentos
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block body %}
+ <div class="container">
+
+
+
+    </div>
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Departamentos</h1>
+    <p class="mb-4">Esta seccion es para agregar los departamentos relacionados a los usuarios.</p>
+    <form method="POST" class="user">
+        {% csrf_token %}
+        {% if error %}
+            <h2>Se produjo un error: {{ error }}</h2>
+        {% else %}
+            <label >Nombre</label>
+            {{ departamento_form.nombre }}
+            <label >Descripcion</label>
+            {{ departamento_form.descripcion }}
+
+<!--            {{departamento_form.as_table }}-->
+            <br>
+            <button type="submit" class="btn btn-primary btn-user btn-block"> Guardar</button>
+            <button type="reset" class="btn btn-primary btn-user btn-block">Limpiar</button>
+
+        {% endif  %}
+    </form>
+</div>
+{% endblock body %}

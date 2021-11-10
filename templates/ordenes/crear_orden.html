@@ -1,0 +1,56 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Creacion de Ordenes de Compra
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Convertir requisicion a orden de compra
+{%endblock pagename %}
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para convertir Requisiciones a Ordenes</h1>
+            <p class="mb-4">Usted ah seleccionado un requerimiento de compra para procesarlo como una orden de compra.</p>
+
+            <div align="center"  class="card border-primary mb-3" style="max-width: 90%;">
+              <div class="card-header">Requisicion No: <strong>{{ requisicion.id }}</strong></div>
+              <div class="card-body text-primary">
+                  <h5 class="card-title">Concepto: <strong>{{  requisicion.concepto }} </strong> </h5>
+                    <p class="card-text">Descripción: <strong> {{  requisicion.descripcion }} </strong> </p>
+                    <p class="card-text">Producto: <strong> {{  requisicion.producto_id }} </strong> </p>
+              </div>
+            </div>
+
+
+            <form method="POST">
+        {% csrf_token %}
+        {% if error %}
+            <h2>Se produjo un error: {{ error }}</h2>
+        {% else %}
+             <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
+            {{ orden_form.recursos_id }}
+            <label >Proveedor (Seleccione el proveedor donde se va a comprar)</label>
+            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
+            {{ orden_form.proveedor_id }}
+            <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
+            {{ orden_form.cantidad_prod }}
+            <label >Indique el precio unitario</label>
+            {{ orden_form.precio_unitario }}
+            <label >Indique el precio total</label>
+            {{ orden_form.precio_total }}
+            <label >Descripcion (Añada un texto para que pueda identificar la orden de compra)</label>
+            {{ orden_form.descripcion }}
+
+            <button class="btn btn-primary" type="reset">Limpiar</button>
+            <button class="btn btn-primary" type="submit"> Guardar</button>
+        {% endif  %}
+    </form>
+{% endblock body %}

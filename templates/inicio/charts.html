@@ -1,0 +1,123 @@
+
+
+{% extends 'tables.html' %}
+{% load static %}
+
+{% block tittle%}
+    Inicio de SAC
+{% endblock tittle%}
+
+{%block usuario%}
+    {{user.nombres}} {{user.apellidos}}
+{%endblock usuario%}
+
+{% block pagename %}
+    Inicio
+{%endblock pagename %}
+
+{% block body %}
+
+<div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Pagina de Inicio</h1>
+                    </div>
+
+                    <div class="row">
+
+                        <!-- Earnings (Monthly) Card Example -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Pronóstico del Clima</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <div id="cont_0cd6b408cfcf5b777d3373200d05ea22"><script type="text/javascript" async src="https://www.meteored.mx/wid_loader/0cd6b408cfcf5b777d3373200d05ea22"></script></div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Earnings (Annual) Card Example -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Mis Datos</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <font size="2">
+                                                    <strong>email:</strong>
+                                                    <br>
+                                                {{ user.email }}
+                                                <br>
+                                                    <strong>Teléfono:</strong>
+                                                    <br>
+                                                {{ user.telefono }}
+                                                <br>
+                                                    <strong>Departamento:</strong>
+                                                    <br>
+                                                {{ user.departamento_id }}
+
+                                                </font>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+<!--                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                        <!-- EStatus de Requisiciones -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <font size="1" face="Arial">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Estatus de Requisicionesde {{user.nombres}}:</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <br>
+                                                Pendientes: {{ requisicionesp }}
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <br>
+                                                Canceladas: {{ requisicionesc }}
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <br>
+                                                Aprobadas: {{ requisicionesa }}
+                                            </div>
+                                        </div>
+                                        </font>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+
+
+
+
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+{% endblock body %}

@@ -1,0 +1,18 @@
+sacar el ID del Hotel:_
+
+https://www.travelweekly.com/Hotels/Advanced
+
+
+
+En Admin / Travel Admin
+
+Manage Corp Discounts
+
+	GRUPO AMERICAN
+		
+		Add property specific hotel discount
+
+Most Preferred dejarlo asi 
+
+
+destinos primeros: MTY, CDMEx, GUAD, LEON, QUERETARO

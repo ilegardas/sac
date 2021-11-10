@@ -1,0 +1,65 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Listado de Departamentos
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Departamentos
+{%endblock pagename %}
+
+{% block body %}
+    {% if departamentos %}
+        <div class="container-fluid">
+            <h1 class="h3 mb-2 text-gray-800">Listado de Departamentos Existentes</h1>
+            <p class="mb-4">Esta seccion es para agregar los departamentos relacionados a los requerimientos de compras, ordenes de compra y Compas. Si se borra un departamento se borran los usuarios relacionados .</p>
+
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Opciones</th>
+                </tr>
+            </tfoot>
+            <tbody>
+                {% for departamento in departamentos %}
+                    <tr>
+                        <td>{{ departamento.id }}</td>
+                        <td>{{ departamento.nombre }}</td>
+                        <td>{{ departamento.descripcion }}</td>
+
+                        <td>
+                            <a href="{% url 'editar_departamento' departamento.id%}">Editar</a> |
+                            <a href="{% url 'eliminar_departamento' departamento.id%}">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+            </div>
+        </div>
+    {% else %}
+        <div align="center">
+            <h1>No existen departamentos registrados</h1>
+        </div>
+    {% endif %}
+{% endblock body %}

@@ -1,0 +1,45 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Alta de Usuarios
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Agregar Usuarios
+{%endblock pagename %}
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Usuarios</h1>
+            <p class="mb-4">Esta seccion es para agregar los usuarios del sistema.</p>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if error %}
+                    <h2>Se produjo un error: {{ error }}</h2>
+                {% else %}
+                    {{usuario_form.as_p }}
+                    <br>
+                    Grupo de Permisos
+                     <select name="grupo" class="form-select form-select-sm">
+                                <option value=""></option>
+                                {% for grupo in grupos %}
+                                    <option value="{{ grupo.name }}">{{ grupo.name }}</option>
+                                {% endfor %}
+                     </select>
+                    <br>
+                    <button type="reset" class="btn btn-primary btn-user btn-block">Limpiar</button>
+                    <button type="submit" class="btn btn-primary btn-user btn-block"> Guardar</button>
+                    <br>
+                {% endif  %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

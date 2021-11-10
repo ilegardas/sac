@@ -1,0 +1,36 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Alta de Recursos
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Agregar Recursos
+{%endblock pagename %}
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Recursos</h1>
+            <p class="mb-4">Esta seccion es para agregar los recursos relacionados a las compras.</p>
+            <form method="POST">
+                {% csrf_token %}
+                {% if error %}
+                    <h2>Se produjo un error: {{ error }}</h2>
+                {% else %}
+                    {{recurso_form.as_p }}
+                    <button type="reset" class="btn btn-primary btn-user btn-block">Limpiar</button>
+                    <button type="submit" class="btn btn-primary btn-user btn-block"> Guardar</button>
+                    <br>
+                {% endif  %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}
