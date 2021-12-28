@@ -85,9 +85,10 @@
         </div>
         {% endif %}
     </div>
-    {% if inventarios %}
-            <h1 class="h3 mb-2 text-gray-800">Listado de Inventarios Existentes</h1>
+        <h1 class="h3 mb-2 text-gray-800">Listado de Inventarios Existentes</h1>
             <p class="mb-4">Esta seccion es para agregar los inventarios de productos</p>
+            <a href="{% url 'crear_inventario' %}" type="button" class="btn btn-outline-success btn-sm shadow">Agregar al Inventario</a>
+    {% if inventarios %}
 
         <div class="card-body">
             <div class="table-responsive">

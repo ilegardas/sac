@@ -85,13 +85,15 @@
     </div>
     {% endif %}
 </div>
-
-    {% if usuarios %}
-        <div class="container-fluid">
+    <div class="container-fluid">
             <h1 class="h3 mb-2 text-gray-800">Listado de Usuarios Existentes</h1>
             <p class="mb-4">Listado de usuarios y sus estatus</p>
+            <a href="{% url 'crear_usuario' %}" type="button" class="btn btn-outline-success btn-sm shadow">Agregar Usuario</a>
 
-        </div>
+    </div>
+
+    {% if usuarios %}
+
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -144,4 +146,5 @@
             <h1>No existen usuarios registrados actualmente</h1>
         </div>
     {% endif %}
+
 {% endblock body %}

@@ -27,7 +27,7 @@
 
 
     <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
 
 
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
@@ -43,8 +43,7 @@
             $('#dataTable').DataTable({
                 responsive: true,
                 destroy: true,
-                ordering: true,
-                searching:true,
+                ordering: false,
                 info: false,
                 dom: 'Bfrtip',
                 buttons: [
@@ -74,6 +73,43 @@
     {% if bitacoras %}
             <h1 class="h3 mb-2 text-gray-800">Listado de Movimientos (Bitacora)</h1>
             <p class="mb-4">Aqui se listan los movimientos relacionados a inventarios, requerimientos, ordenes de compra y compras</p>
+        <form method="POST">
+            {% csrf_token %}
+                <table class="table" >
+                  <thead>
+                    <tr>
+                        <th scope="col">Fechas de Creacion</th>
+
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">
+                          <input autocomplete="False" id="fecha_creacion"  class="form-select form-select-sm" type="text" name="fecha_creacion" value="" />
+                            <script>
+                            $(function() {
+                             $('#fecha_creacion').daterangepicker({
+                                    "autoApply": true,
+                                    locale: {
+                                      format: 'DD-MM-YYYY',
+                                    }
+                                }, function(start, end, label) {
+                                  console.log('New date range selected: ' + start.format('DD-MM-YYYY') + ' to ' + end.format('DD-MM-YYYY') + ' (predefined range: ' + label + ')');
+
+                                });
+                            });
+                            </script>
+                      </th>
+
+                    </tr>
+                  </tbody>
+                </table>
+            <div align="center">
+                <button class="btn btn-primary" type="reset">Limpiar</button>
+                <button class="btn btn-primary" type="submit"> Buscar</button>
+            </div>
+        </form>
+
 
         <div class="card-body">
             <div class="table-responsive">

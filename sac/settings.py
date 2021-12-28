@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-lr!xm_#_x*f1)_d%5_6&5g9xy3i%8htr@t@t=4&%0%yz)s(@9g'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','143.198.142.185']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','137.184.112.196']
 
 
 # Application definition
@@ -90,13 +90,24 @@ WSGI_APPLICATION = 'sac.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django',
-        'USER': 'django',
-        'PASSWORD': '89f1f0fed3bb48e3ae1150932042ce5b',
-        'HOST': '143.198.142.185',
+        'NAME': 'sac_db',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
         'PORT': '5432'
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'sac_dbs',
+#         'USER': 'sacgue',
+#         'PASSWORD': 'SacGue21',
+#         'HOST': 'localhost',
+#         'PORT': '5432'
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -145,7 +156,7 @@ EMAIL_HOST="smtp.gmail.com"
 EMAIL_USE_TLS=True
 EMAIL_PORT=587
 EMAIL_HOST_USER="sacmunicipio@gmail.com"
-EMAIL_HOST_PASSWORD ="dYMOLIN3131#"
+EMAIL_HOST_PASSWORD ="b4TW1NG55#"
 
 
 # Default primary key field type

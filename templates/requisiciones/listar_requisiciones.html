@@ -47,7 +47,7 @@
             $('#dataTable').DataTable({
                 responsive: true,
                 destroy: true,
-                ordering: true,
+                ordering: false,
                 searching:true,
                 info: false,
                 dom: 'Bfrtip',
@@ -85,7 +85,6 @@
             </div>
             {% endif %}
         </div>
-    {% if requisiciones %}
         <div class="container-fluid">
             <h1 class="h3 mb-2 text-gray-800">Listado de Requerimientos de Compra</h1>
             <p class="mb-4">Estos son los requerimientos que tiene pendientes de aprobación:</p>
@@ -94,7 +93,7 @@
             <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
               <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="offcanvasBottomLabel">El proceso de aprobación</h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close text-reset shadow" data-bs-dismiss="offcanvas" aria-label="Close"></button>
               </div>
               <div class="offcanvas-body small">
                 El primer paso es crear el requirimiento de compra completando los campos solicitados
@@ -106,7 +105,10 @@
                 Una vez con la orden de compra ya puede ir con el proveedor seleccionado por el producto de la requisición. El proceso de pago se indica al momento así como la recepcion de factura en PDF y XML
               </div>
             </div>
+            <a href="{% url 'crear_requisicion' %}" type="button" class="btn btn-outline-success btn-sm">Agregar Requisicion</a>
         </div>
+    {% if requisiciones %}
+
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -115,8 +117,9 @@
                             <th>#</th>
                             <th>Departamento</th>
                             <th>Producto</th>
-                            <th>Concepto</th>
+                            <th>Proveedor</th>
                             <th>Descripcion</th>
+                            <th>Recurso</th>
                             <th>Fecha de Creacion</th>
                             <th>Estatus</th>
                             <th>Opciones</th>
@@ -127,26 +130,50 @@
                             <tr>
                                 <td>{{ requisicion.id }}</td>
                                 <td>{{ requisicion.departamento_id }}</td>
-                                <td>{{ requisicion.producto_id }}</td>
-                                <td>{{ requisicion.concepto }}</td>
+                                <td>
+                                {% for producto in requisicion.producto_id.all %}  {{producto.nombre}},{% endfor %} {% if requisicion.vehiculo_id is not None %} {{ requisicion.vehiculo_id }} {% endif %}
+                                </td>
+                                <td>{{ requisicion.proveedor_id }}</td>
                                 <td>{{ requisicion.descripcion }}</td>
+                                <td>{{ requisicion.recursos_id }}</td>
                                 <td>{{ requisicion.fecha_creacion }}</td>
                                 <td>{{ requisicion.estatus }}</td>
 
                                 <td>
                                     {% if perms.personas.change_requisicion %}
-                                    <a href="{% url 'editar_requisicion' requisicion.id%}">
-                                        <img title="Editar Requerimiento" width="30" height="30" src="{% static 'img/edit.png' %}" class="img-thumbnail" alt="Editar los campos de la orden">
+                                        {% if requisicion.estatus == 'pendiente' %}
+                                            <a href="{% url 'editar_requisicion' requisicion.id%}">
+                                                <img title="Editar Requerimiento" width="30" height="30" src="{% static 'img/edit.png' %}" class="img-thumbnail" alt="Editar los campos de la orden">
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <a  href="javascript:ventanaSecundaria('{% url 'imprimir-requisicion' requisicion.id %}')"   >
+                                                <img title="Imprimir Requisicion " width="30" height="30" src="{% static 'img/printer.png' %}" class="img-thumbnail" alt="Generar Requisicion para Imprimir">
                                     </a>
+                                    <br>
+                                    {% if perms.personas.change_requisicion %}
+                                        {% if requisicion.estatus != 'pendiente' %}
+                                            <a href="{% url 'delistar-requisicion' requisicion.id %}">
+                                                <img title="Quitar Requerimiento" width="30" height="30" src="{% static 'img/hide.png' %}" class="img-thumbnail" alt="Editar los campos de la orden">
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                     {% if perms.personas.delete_requisicion %}
-                                    <a href="{% url 'eliminar_requisicion' requisicion.id%}">
-                                        <img title="Eliminar Requerimiento" width="30" height="30" src="{% static 'img/trash.png' %}" class="img-thumbnail" alt="Eliminar el requerimiento">
-                                    </a>
+                                        {% if requisicion.estatus == 'pendiente' %}
+                                            <a href="{% url 'eliminar_requisicion' requisicion.id%}">
+                                                <img title="Eliminar Requerimiento" width="30" height="30" src="{% static 'img/trash.png' %}" class="img-thumbnail" alt="Eliminar el requerimiento">
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
+                     <script>
+                        function ventanaSecundaria (URL){
+                           window.open(URL,"ventana1","width=400,height=600,scrollbars=NO")
+                        }
+                        </script>
                     </tbody>
                 </table>
             </div>

@@ -85,12 +85,14 @@
     </div>
     {% endif %}
 </div>
-    {% if proveedores %}
-        <div class="container-fluid">
+    <div class="container-fluid">
             <h1 class="h3 mb-2 text-gray-800">Listado de Proveedores Existentes</h1>
             <p class="mb-4">Esta seccion es para agregar los proveedores dados de alta para las compras autorizadas .</p>
-
+            <a href="{% url 'crear_proveedor' %}" type="button" class="btn btn-outline-success btn-sm shadow">Agregar Proveedor</a>
         </div>
+
+    {% if proveedores %}
+
         <div class="card-body">
             <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -101,10 +103,8 @@
                         <th>Descripcion</th>
                         <th>Telefono</th>
                         <th>Email</th>
-                        <th>Rubro</th>
                         <th>Direccion</th>
                         <th>RFC</th>
-                        <th>Contacto</th>
                         <th>Fecha de Creacion</th>
                         <th>Opciones</th>
                     </tr>
@@ -117,10 +117,8 @@
                             <td>{{ proveedor.descripcion }}</td>
                             <td>{{ proveedor.telefono }}</td>
                             <td>{{ proveedor.email }}</td>
-                            <td>{{ proveedor.rubro }}</td>
                             <td>{{ proveedor.direccion }}</td>
                             <td>{{ proveedor.rfc }}</td>
-                            <td>{{ proveedor.contacto }}</td>
                             <td>{{ proveedor.fecha_creacion }}</td>
                             <td>
                                 {% if perms.personas.change_proveedor %}

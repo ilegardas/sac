@@ -25,32 +25,46 @@
               <div class="card-body text-primary">
                   <h5 class="card-title">Concepto: <strong>{{  requisicion.concepto }} </strong> </h5>
                     <p class="card-text">Descripción: <strong> {{  requisicion.descripcion }} </strong> </p>
-                    <p class="card-text">Producto: <strong> {{  requisicion.producto_id }} </strong> </p>
+                    <p class="card-text">Producto: <strong>
+                    {% for producto in requisicion.producto_id.all %}
+                                    {{producto.nombre}},
+                    {% endfor %}
+                    </strong> </p>
               </div>
             </div>
 
 
             <form method="POST">
-        {% csrf_token %}
-        {% if error %}
-            <h2>Se produjo un error: {{ error }}</h2>
-        {% else %}
-             <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
-            {{ orden_form.recursos_id }}
-            <label >Proveedor (Seleccione el proveedor donde se va a comprar)</label>
-            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
-            {{ orden_form.proveedor_id }}
-            <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
-            {{ orden_form.cantidad_prod }}
-            <label >Indique el precio unitario</label>
-            {{ orden_form.precio_unitario }}
-            <label >Indique el precio total</label>
-            {{ orden_form.precio_total }}
-            <label >Descripcion (Añada un texto para que pueda identificar la orden de compra)</label>
-            {{ orden_form.descripcion }}
+            {% csrf_token %}
+            {% if error %}
+                <h2>Se produjo un error: {{ error }}</h2>
+            {% else %}
+                <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
+                <select name="recursos_id" class="form-select form-select-sm">
+                        <option value={{ requisicion.recursos_id.id }}>{{ requisicion.recursos_id.nombre }}</option>
+                        {% for recurso in recursos %}
+                            <option value="{{ recurso.id }}">{{ recurso.nombre }}</option>
+                        {% endfor %}
+                </select>
 
-            <button class="btn btn-primary" type="reset">Limpiar</button>
-            <button class="btn btn-primary" type="submit"> Guardar</button>
-        {% endif  %}
+                <label >Proveedor </label>
+                <label >Si no se encuentra puede agregarlo <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
+                <select name="proveedor_id" class="form-select ">
+                                    <option value={{ requisicion.proveedor_id.id }}>{{ requisicion.proveedor_id.nombre }}</option>
+                                    {% for proveedor in proveedores %}
+                                        <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
+                                    {% endfor %}
+                </select>
+                <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
+                {{ orden_form.cantidad_prod }}
+                <label >Indique el precio unitario</label>
+                {{ orden_form.precio_unitario }}
+                <label >Indique el precio total</label>
+                {{ orden_form.precio_total }}
+
+                <br>
+                <button class="btn btn-primary" type="reset">Limpiar</button>
+                <button class="btn btn-primary" type="submit"> Guardar</button>
+            {% endif  %}
     </form>
 {% endblock body %}

@@ -6,7 +6,7 @@ from django.contrib.auth.models import Permission
 # Register your models here.
 
 from personas.models import Departamento, Recurso, Proveedor, Requisicion, OrdenCompra, Compra, \
-    Producto, Inventario, Bitacora, Usuario
+    Producto, Inventario, Bitacora, Usuario, Concepto, Venta, ConceptoVenta
 admin.site.register(Permission)
 #PERSONALIZACION DE LISTADO ADMIN DE USUARIOS
 class UsuarioResource(resources.ModelResource):
@@ -54,8 +54,8 @@ class ProveedorResource(resources.ModelResource):
         model = Proveedor
 
 class ProveedorAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ['nombre','descripcion','rubro','contacto','rfc','direccion']
-    list_display = ('nombre', 'descripcion','telefono','email','rfc','rubro')
+    search_fields = ['nombre','descripcion','rfc','direccion']
+    list_display = ('nombre', 'descripcion','telefono','email','rfc')
     resource_class = ProveedorResource
 
 #PERSONALIZACION DE LISTADO ADMIN DE INVENTARIO
@@ -74,9 +74,37 @@ class RequisicionResource(resources.ModelResource):
         model = Requisicion
 
 class RequisicionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    search_fields = ['departamento_id__nombre','persona_id__nombre','concepto','descripcion','estatus'] #producto_id__nombre para buscar por el nombre del producto no por id
-    list_display = ('id', 'departamento_id','persona_id','concepto','descripcion','estatus','fecha_creacion')
+    search_fields = ['departamento_id__nombre','persona_id__nombre','descripcion','estatus'] #producto_id__nombre para buscar por el nombre del producto no por id
+    list_display = ('id', 'departamento_id','persona_id','descripcion','estatus','fecha_creacion')
     resource_class = RequisicionResource
+
+#PERSONALIZACION DE LISTADO ADMIN DE REQUISICIONES
+class ConceptoResource(resources.ModelResource):
+    class Meta:
+        model = Concepto
+class ConceptoAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    search_fields = ['nombre','clave','fecha_creacion']
+    list_display = ('id','nombre', 'clave','fecha_creacion')
+    resource_class = ConceptoResource
+
+#CLASS PARA EL ADMIN MANYTOMANY DE VENTAS Y CONCEPTOS
+class ConceptoVentainLine(admin.TabularInline):
+    model = ConceptoVenta
+    extra = 1
+    autocomplete_fields = ['concepto_id']
+
+#PERSONALIZACION DE LISTADO ADMIN DE VENTAS
+class VentaResource(resources.ModelResource):
+    class Meta:
+        model = Venta
+class VentaAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+
+    search_fields = ['concepto_id','monto','fecha_creacion']
+    inlines = [ConceptoVentainLine, ]
+    list_display = ('id', 'monto','fecha_creacion')
+    resource_class = VentaResource
+
+
 
 admin.site.register(Departamento,DepartamentoAdmin)
 admin.site.register(Usuario, UsuarioAdmin)
@@ -88,3 +116,5 @@ admin.site.register(Compra)
 admin.site.register(Producto, ProductoAdmin)
 admin.site.register(Inventario,InventarioAdmin)
 admin.site.register(Bitacora)
+admin.site.register(Concepto,ConceptoAdmin)
+admin.site.register(Venta,VentaAdmin)

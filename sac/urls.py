@@ -17,15 +17,22 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.static import serve
-from personas.views import Home, SinPermisos, ListarBitacora  # , logout_user, login_user
+from personas.views import Home, SinPermisos, ListarBitacora, CrearVenta, ListarVentas, \
+    EditarVenta, EliminarVenta, CrearConcepto, ListarConceptos, EditarConcepto, \
+    EliminarConcepto, CrearVehiculo, ListarVehiculo, EditarVehiculo, EliminarVehiculo, \
+    CrearTiposVehiculo, ListarTiposVehiculos, EditarTiposVehiculo, EliminarTiposVehiculo, \
+    ReporteVehiculos  # , logout_user, login_user
 from personas.views import CrearDepartamento, ListarDepartamentos, EditarDepartamento, EliminarDepartamento, CrearRecurso, ListarRecursos, EditarRecurso, EliminarRecurso, CrearProducto, EditarProducto, ListarProductos, EliminarProducto
 from personas.views import CrearProveedor, ListarProveedores,EditarProveedor,EliminarProveedor, CrearInventario, ListarInventarios, EditarInventario, EliminarInventario, CrearRequisicion, ListarRequisiciones, EditarRequisicion, EliminarRequisicion
-from personas.views import CrearOrden, ListarOrdenes, EditarOrden, EliminarOrden, CancelarRequisicion, CancelarOrden, ImprimirOrden, ContadorImpresiones, CrearCompra, EditarCompra, CancelarCompra, ListarCompras, EliminarCompra, TerminarCompra, CrearUsuario, EditarUsuario, ListarUsuarios, EliminarUsuario, ReporteRequerimientos, ReporteOrdenes, ReporteCompras
+from personas.views import CrearOrden, ListarOrdenes, EditarOrden, EliminarOrden, CancelarRequisicion, CancelarOrden, ImprimirOrden, ContadorImpresiones, CrearCompra, EditarCompra, CancelarCompra, ListarCompras, EliminarCompra, TerminarCompra, CrearUsuario, EditarUsuario, ListarUsuarios, EliminarUsuario, ReporteRequerimientos, ReporteOrdenes, ReporteCompras, cambiar_logo, ImprimirRequisicion, TerminarRequisicion
 from personas import views
 from django.contrib.auth.decorators import login_required, permission_required
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', Home, name='inicio'), #path recibe 3 parametros texto de barra de direcciones, la funcion a ehecutar y un nombre de url
+
+    #CAMBIAR LOGO DE FORMATOS
+    path('cambiar-logotipo/',permission_required('personas.delete_usuario', login_url='')(cambiar_logo), name='cambiar-logo' ),
 
     #INICIO DE SESION
     path('accounts/', include('django.contrib.auth.urls')),
@@ -82,8 +89,10 @@ urlpatterns = [
     path('requisiciones/crear_requisicion/',permission_required('personas.add_requisicion', login_url='')(CrearRequisicion), name='crear_requisicion'),
     path('requisiciones/listar_requisiciones/',permission_required('personas.view_requisicion', login_url='')(ListarRequisiciones), name='listar_requisiciones'),
     path('requisiciones/editar_requisiciones/<int:id>',permission_required('personas.change_requisicion', login_url='')(EditarRequisicion), name='editar_requisicion'),
+    path('requisiciones/imprimir_requisicion/<int:id>',permission_required('personas.view_requisicion', login_url='')(ImprimirRequisicion), name='imprimir-requisicion'),
     path('requisiciones/eliminar_requisiciones/<int:id>',permission_required('personas.delete_requisicion', login_url='')(EliminarRequisicion), name='eliminar_requisicion'),
     path('requisiciones/cancelar/<int:id>',permission_required('personas.change_requisicion', login_url='')(CancelarRequisicion), name='cancelar-requisicion'),
+    path('requisiciones/deslistar/<int:id>',permission_required('personas.change_requisicion', login_url='')(TerminarRequisicion), name='delistar-requisicion'),
 
 #SEGMENTO PARA ORDENES DE COMPRA
     path('ordenes/crear_orden/<int:id>',permission_required('personas.add_ordencompra', login_url='')(CrearOrden), name='crear_orden'),
@@ -104,9 +113,31 @@ urlpatterns = [
     path('reportes/requerimientos/',permission_required('personas.view_requisicion', login_url='')(ReporteRequerimientos), name='reporte_requerimientos'),
     path('reportes/ordenes_compra/',permission_required('personas.view_ordencompra', login_url='')(ReporteOrdenes), name='reporte_ordenes'),
     path('reportes/compras/',permission_required('personas.view_compra', login_url='')(ReporteCompras), name='reporte_compras'),
+    path('reportes/vehiculos/',permission_required('personas.view_ordencompra', login_url='')(ReporteVehiculos), name='reporte_vehiculos'),
 
     path('sinpermisos/', SinPermisos, name='sin_permisos'),
     path('bitacora/', ListarBitacora, name='bitacora'),
+#SEGMENTO PARA CONCEPTOS
+    path('conceptos/crear_concepto/',permission_required('personas.add_concepto', login_url='')(CrearConcepto), name='crear_concepto'),
+    path('conceptos/listar_conceptos/',permission_required('personas.view_concepto', login_url='')(ListarConceptos), name='listar_conceptos'),
+    path('conceptos/editar_concepto/<int:id>',permission_required('personas.change_concepto', login_url='')(EditarConcepto), name='editar_concepto'),
+    path('conceptos/eliminar_concepto/<int:id>',permission_required('personas.delete_concepto', login_url='')(EliminarConcepto), name='eliminar_concepto'),
+#SEGMENTO PARA VENTAS
+    path('ventas/crear_venta/',permission_required('personas.add_venta', login_url='')(CrearVenta), name='crear_venta'),
+    path('ventas/listar_ventas/',permission_required('personas.view_venta', login_url='')(ListarVentas), name='listar_ventas'),
+    path('ventas/editar_venta/<int:id>',permission_required('personas.change_venta', login_url='')(EditarVenta), name='editar_venta'),
+    path('ventas/eliminar_venta/<int:id>',permission_required('personas.delete_venta', login_url='')(EliminarVenta), name='eliminar_venta'),
+#SEGMENTO PARA VEHICULOS
+    path('vehiculos/crear_vehiculo/',permission_required('personas.add_vehiculo', login_url='')(CrearVehiculo), name='crear_vehiculo'),
+    path('vehiculos/listar_vehiculos/',permission_required('personas.view_vehiculo', login_url='')(ListarVehiculo), name='listar_vehiculos'),
+    path('vehiculos/editar_vehiculo/<int:id>',permission_required('personas.change_vehiculo', login_url='')(EditarVehiculo), name='editar_vehiculo'),
+    path('vehiculos/eliminar_vehiculo/<int:id>',permission_required('personas.delete_vehiculo', login_url='')(EliminarVehiculo), name='eliminar_vehiculo'),
+#SEGMENTO PARA TIPOS DE VEHICULOS
+    path('vehiculos/crear_tipovehiculo/',permission_required('personas.add_tiposvehiculo', login_url='')(CrearTiposVehiculo), name='crear_tiposvehiculo'),
+    path('vehiculos/listar_tipovehiculoss/',permission_required('personas.view_tiposvehiculo', login_url='')(ListarTiposVehiculos), name='listar_tiposvehiculos'),
+    path('vehiculos/editar_tipovehiculo/<int:id>',permission_required('personas.change_tiposvehiculo', login_url='')(EditarTiposVehiculo), name='editar_tiposvehiculo'),
+    path('vehiculos/eliminar_tipovehiculo/<int:id>',permission_required('personas.delete_tiposvehiculo', login_url='')(EliminarTiposVehiculo), name='eliminar_tiposvehiculo'),
+
 ]
 
 urlpatterns += [

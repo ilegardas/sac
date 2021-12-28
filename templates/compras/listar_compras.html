@@ -47,7 +47,7 @@
             $('#dataTable').DataTable({
                 responsive: true,
                 destroy: true,
-                ordering: true,
+                ordering: false,
                 searching:true,
                 info: false,
                 dom: 'Bfrtip',
@@ -70,7 +70,7 @@
                 $('#dataTable2').DataTable({
                     responsive: true,
                     destroy: true,
-                    ordering: true,
+                    ordering: false,
                     searching:true,
                     info: false,
                     dom: 'Bfrtip',
@@ -139,8 +139,10 @@
                             <th>Recurso</th>
                             <th>Proveedor</th>
                             <th>Aprobador</th>
+                            <th>Requisitor</th>
+                            <th>Monto</th>
                             <th>Fecha de Creacion</th>
-                            <th>Estatus</th>
+
                             <th>Opciones</th>
                         </tr>
                     </thead>
@@ -149,17 +151,21 @@
                             <tr>
                                 <td>{{ orden.id }}</td>
                                 <td>{{ orden.descripcion }}</td>
-                                <td>{{ orden.producto_id }}</td>
+                                 <td>
+                                {% for producto in orden.requerimiento_id.producto_id.all %} {{producto.nombre}},{% endfor %} {% if orden.requerimiento_id.vehiculo_id is not None %} Para:{{ orden.requerimiento_id.vehiculo_id }} {% endif %}
+                                </td>
                                 <td>{{ orden.recursos_id }}</td>
                                 <td>{{ orden.proveedor_id }}</td>
                                 <td>{{ orden.aprobador_id }}</td>
+                                <td>{{ orden.requerimiento_id.persona_id }}</td>
+                                <td>${{ orden.precio_total }}</td>
                                 <td>{{ orden.fecha_creacion }}</td>
-                                <td>{{ orden.aprobador_id }}</td>
+
                                 <td align="center">
                                     <div class="row">
                                         <div class="col" >
                                     <a href="{% url 'crear_compra' orden.id%}" title="Convertir a Compra" class="btn btn-outline-success btn-sm">
-                                        Comprar
+                                        Pagar
                                     </a>
                                     <a href="{% url 'cancelar-orden' orden.id%}" class="">
                                         <img title="Cancelar Orden de Compra" width="30" height="30" src="{% static 'img/cancel.png' %}" class="img-thumbnail" alt="Cancelar la orden">
@@ -211,6 +217,8 @@
                             <th>Descripcion</th>
                             <th>Aprobador</th>
                             <th>Proveedor</th>
+                            <th>Producto</th>
+                            <th>Requisitor</th>
                             <th>PDF</th>
                             <th>XML</th>
                             <th>Total</th>
@@ -226,9 +234,13 @@
                                 <td>{{ compra.descripcion }}</td>
                                 <td>{{ compra.aprobador_id }}</td>
                                 <td>{{ compra.ordenCompra_id.proveedor_id }}</td>
+                                 <td>
+                                {% for producto in compra.ordenCompra_id.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if compra.ordenCompra_id.requerimiento_id.vehiculo_id is not None %} Para:{{ compra.ordenCompra_id.requerimiento_id.vehiculo_id }} {% endif %}
+                                </td>
+                                <td>{{ compra.ordenCompra_id.requerimiento_id.persona_id }}</td>
                                 <td><a target="_blank" href="/media/{{ compra.pdf }}">Ver</a></td>
                                 <td><a target="_blank" href="/media/{{ compra.xml }}">Ver</a></td>
-                                <td>{{ compra.Total }}</td>
+                                <td>${{ compra.Total }}</td>
                                 <td>{{ compra.fecha_creacion }}</td>
                                 <td>{{ compra.estatus }}</td>
                                 <td>
@@ -237,10 +249,10 @@
 
                                         <div class="col" align="center">
                                             {% if perms.personas.change_compra %}
-                                             <a class="btn btn-outline-primary btn-sm" href="{% url 'editar_compra' compra.id %}">
+                                             <a class="" href="{% url 'editar_compra' compra.id %}">
                                                  <img title="Editar Compra" width="30" height="30" src="{% static 'img/edit.png' %}" class="img-thumbnail" alt="Editar los campos de la compra">
                                              </a>
-                                            <a class="btn btn-outline-primary btn-sm" href="{% url 'terminar_compra' compra.id %}">
+                                            <a class="" href="{% url 'terminar_compra' compra.id %}">
                                                  <img title="Terminar Compra" width="30" height="30" src="{% static 'img/finish.png' %}" class="img-thumbnail" alt="Editar los campos de la compra">
                                              </a>
                                             {% endif %}

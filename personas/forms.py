@@ -1,9 +1,11 @@
 from django import forms
-from .models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, Usuario, OrdenCompra, Compra
+from .models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, Usuario, OrdenCompra, Compra, \
+    Concepto, Venta, Vehiculo, TiposVehiculo
+
 
 class UploadFileForm(forms.Form):
-    title = forms.CharField(max_length=50)
-    file = forms.FileField()
+
+    Logotipo = forms.FileField()
 
 class DepartamentoForm(forms.ModelForm):
     class Meta:
@@ -141,7 +143,7 @@ class ProductoForm(forms.ModelForm):
 class ProveedorForm(forms.ModelForm):
     class Meta:
         model = Proveedor
-        fields = ['nombre','descripcion', 'telefono','email','rubro','direccion','rfc','contacto']
+        fields = ['nombre','descripcion', 'telefono','email','direccion','rfc']
         widgets = {
             'nombre': forms.TextInput(
                 attrs={
@@ -171,13 +173,6 @@ class ProveedorForm(forms.ModelForm):
                 }
 
             ),
-            'rubro': forms.TextInput(
-                attrs={
-                    'class': 'form-control form-control-user'
-
-                }
-
-            ),
             'direccion': forms.TextInput(
                 attrs={
                     'class': 'form-control form-control-user'
@@ -191,13 +186,6 @@ class ProveedorForm(forms.ModelForm):
 
                 }
 
-            ),
-            'contacto': forms.TextInput(
-                attrs={
-                    'class': 'form-control form-control-user'
-
-                }
-
             )
 
         }
@@ -205,7 +193,7 @@ class ProveedorForm(forms.ModelForm):
 class InventarioForm(forms.ModelForm):
     class Meta:
         model = Inventario
-        fields = ['categoria','unidad_medida', 'descripcion','stock','stock_min','producto_id']
+        fields = ['producto_id','categoria','unidad_medida', 'descripcion','stock','stock_min']
         widgets = {
             'categoria': forms.TextInput(
                 attrs={
@@ -255,11 +243,11 @@ class InventarioForm(forms.ModelForm):
 class RequisicionForm(forms.ModelForm):
     class Meta:
         model = Requisicion
-        fields = ['departamento_id','persona_id', 'producto_id', 'concepto','descripcion']
+        fields = ['departamento_id','persona_id', 'recursos_id','producto_id','proveedor_id','descripcion','vehiculo_id']
         widgets = {
             'departamento_id': forms.TextInput(
                 attrs={
-                    'class': 'form-control form-control-user',
+                    'class': 'form-control',
                     'readonly': True,
                     'disabled': True
 
@@ -278,17 +266,27 @@ class RequisicionForm(forms.ModelForm):
                 }
 
             ),
-            'producto_id': forms.Select(
+            'recursos_id': forms.Select(
                 attrs={
                     'class': 'form-control form-control-user',
+                    'readonly': False,
+                    'disabled': False
 
                 }
 
             ),
-            'concepto': forms.TextInput(
+            'proveedor_id': forms.Select(
                 attrs={
                     'class': 'form-control form-control-user',
+                    'readonly': False,
+                    'disabled': False
 
+                }
+
+            ),
+            'producto_id': forms.SelectMultiple(
+                attrs={
+                    'class': 'form-control form-control-user',
 
                 }
 
@@ -296,6 +294,13 @@ class RequisicionForm(forms.ModelForm):
             'descripcion': forms.Textarea(
                 attrs={
                     'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'vehiculo_id': forms.Select(
+                attrs={
+                    'class': 'form-control form-control-user',
 
                 }
 
@@ -435,3 +440,150 @@ class ReporteComprasForm(forms.ModelForm):
                 }
            )
         }
+class ConceptoForm(forms.ModelForm):
+    class Meta:
+        model = Concepto
+        fields = ['nombre', 'clave']
+        widgets = {
+            'nombre': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'clave': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            )
+        }
+class VentaForm(forms.ModelForm):
+    def __init__(self, *args,**kwargs):
+        super().__init__(*args,kwargs)
+        for form in self.visible_fields():
+            form.field.widget.attrs['class'] = 'form-control'
+            form.field.widget.attrs['autocomplete'] = 'off'
+        self.fields['cliente'].widget.attrs['autofocus']=True
+        self.fields['cliente'].widget.attrs['class'] = 'form-control select2'
+        self.fields['monto'].widget.attrs['readonly'] = 'True'
+        self.fields['monto'].widget.attrs['default'] = '0.0'
+    class Meta:
+        model = Venta
+        fields = ['monto','cliente']
+        widgets = {
+            'monto': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'cliente': forms.TextInput(
+                attrs={
+                    'class': 'form-control select2',
+                    'style': 'width: 100%'
+
+                }
+
+            ),
+            'fecha_creacion': forms.DateInput(
+                attrs={
+                    'class': 'form-control'
+
+                }
+            )
+        }
+class TiposVehiculoForm(forms.ModelForm):
+    class Meta:
+        model = TiposVehiculo
+        fields = ['nombre', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'descripcion': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            )
+        }
+class VehiculoForm(forms.ModelForm):
+    class Meta:
+        model = Vehiculo
+        CHOICES = (('Carro', 'Carro'), ('Camioneta', 'Camioneta'),('Troca', 'Troca'),('Motocicleta', 'Motocicleta'),('Maquinaria', 'Maquinaria'),)
+        tipo = forms.ChoiceField( choices=CHOICES )
+        fields = ['nombre','marca','modelo', 'tipo','placas','departamento_id','fecha_mantenimiento','anotaciones']
+        widgets = {
+            'nombre': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'marca': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'modelo': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'placas': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'tipo': forms.Select(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'departamento_id': forms.Select(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'fecha_mantenimiento': forms.SelectDateWidget(
+
+           ),
+            'anotaciones': forms.Textarea(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+        }
+class ProductosForm(forms.Form):
+    productos = forms.ModelChoiceField(queryset=Producto.objects.all() , widget=forms.Select(attrs={
+        'class': 'form-control'
+    }))
+    vehiculos = forms.ModelChoiceField(queryset=Vehiculo.objects.all(), required=False ,blank=True, widget=forms.Select(attrs={
+        'class': 'form-control',
+        'blank':'True',
+        'null':'True',
+        'initial':'vacio'
+
+    }))

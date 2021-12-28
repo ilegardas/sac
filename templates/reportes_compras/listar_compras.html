@@ -27,7 +27,7 @@
 
 
     <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
 
 
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
@@ -77,7 +77,8 @@
                   <thead>
                     <tr>
                         <th scope="col">Fechas de Creacion</th>
-                        <th scope="col">Usuario</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Aprobador</th>
                         <th scope="col">Descripcion</th>
                         <th scope="col">Estatus</th>
                     </tr>
@@ -100,7 +101,14 @@
                             });
                             </script>
                       </th>
-
+                      <td>
+                            <select name="departamento_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for departamento in departamentos %}
+                                    <option value="{{ departamento.id }}">{{ departamento.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                      </td>
                       <td>
                             <select name="aprobador_id" class="form-select form-select-sm">
                                 <option value="todos">Todos</option>
@@ -116,9 +124,10 @@
                      <td>
                           <select name="estatus" class="form-select form-select-sm">
                                 <option value="todos">Todos</option>
-                                <option value="pendiente">pendiente</option>
-                                <option value="procesado">procesado</option>
-                                <option value="cancelado">cancelado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="pagado">Pagado</option>
+                              <option value="terminado">Terminado</option>
+                                <option value="cancelado">Cancelado</option>
                             </select>
                       </td>
                     </tr>
@@ -145,6 +154,7 @@
                             <th>#</th>
                             <th>Departamento</th>
                             <th>Aprobador</th>
+                            <th>Requisitor</th>
                             <th>Producto</th>
                             <th>Cantidad</th>
                             <th>Proveedor</th>
@@ -156,6 +166,7 @@
                             <th>Fecha Creacion</th>
                             <th>Fecha Estatus</th>
 
+
                         </tr>
                     </thead>
                     <tbody>
@@ -163,8 +174,11 @@
                             <tr>
                                 <td>{{ compra.id }}</td>
                                 <td>{{ compra.ordenCompra_id.requerimiento_id.departamento_id }}</td>
-                                <td>{{ compra.aprobador_id }}</td>
-                                <td>{{ compra.ordenCompra_id.producto_id }}</td>
+                                <td>{{ compra.ordenCompra_id.aprobador_id }}</td>
+                                <td>{{ compra.ordenCompra_id.requerimiento_id.persona_id }}</td>
+                                <td>
+                                {% for producto in compra.ordenCompra_id.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if compra.ordenCompra_id.requerimiento_id.vehiculo_id is not None %} Para: {{ compra.ordenCompra_id.requerimiento_id.vehiculo_id }} {% endif %}
+                                </td>
                                 <td>{{ compra.ordenCompra_id.cantidad_prod }}</td>
                                 <td>{{ compra.ordenCompra_id.proveedor_id }}</td>
                                 <td>{{ compra.Total }}</td>
@@ -174,6 +188,7 @@
                                 <td>{{ compra.estatus }}</td>
                                 <td>{{ compra.fecha_creacion }}</td>
                                 <td>{{ compra.fecha_estatus }}</td>
+
 
                             </tr>
                         {% endfor %}

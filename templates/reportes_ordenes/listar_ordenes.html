@@ -142,7 +142,7 @@
                      <td>
                           <select name="estatus" class="form-select form-select-sm">
                                 <option value="todos">Todos</option>
-                                <option value="pendiente">pendiente</option>
+                                <option value="autorizado">autorizado</option>
                                 <option value="procesado">procesado</option>
                                 <option value="cancelado">cancelado</option>
                             </select>
@@ -171,6 +171,7 @@
                             <th>#</th>
                             <th>Departamento</th>
                             <th>Aprobador</th>
+                            <th>Requisitor</th>
                             <th>Producto</th>
                             <th>Cantidad</th>
                             <th>Precio Unitario</th>
@@ -178,10 +179,11 @@
                             <th>Proveedor</th>
                             <th>Recursos</th>
                             <th>Descripcion</th>
-                            <th>Fecha</th>
+                            <th>Creado</th>
                             <th>Estatus</th>
                             <th>Fecha Estatus</th>
                             <th># Requerimiento</th>
+
 
                         </tr>
                     </thead>
@@ -191,7 +193,10 @@
                                 <td>{{ orden.id }}</td>
                                 <td>{{ orden.requerimiento_id.departamento_id }}</td>
                                 <td>{{ orden.aprobador_id }}</td>
-                                <td>{{ orden.producto_id }}</td>
+                                <td>{{ orden.requerimiento_id.persona_id }}</td>
+                                <td>
+                                    {% for producto in orden.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if orden.requerimiento_id.vehiculo_id is not None %} Para: {{ orden.requerimiento_id.vehiculo_id }} {% endif %}
+                                </td>
                                 <td>{{ orden.cantidad_prod }}</td>
                                 <td>{{ orden.precio_unitario }}</td>
                                 <td>{{ orden.precio_total }}</td>
@@ -202,6 +207,7 @@
                                 <td>{{ orden.estatus }}</td>
                                 <td>{{ orden.fecha_estatus }}</td>
                                 <td>{{ orden.requerimiento_id.id }}</td>
+
 
                             </tr>
                         {% endfor %}

@@ -1,18 +1,38 @@
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
-from personas.forms import DepartamentoForm, RecursoForm, ProductoForm, ProveedorForm, InventarioForm, RequisicionForm, OrdenForm, CompraForm, UsuarioForm, ReporteRequisicionesForm, ReporteOrdenesForm, ReporteComprasForm
+from personas.forms import DepartamentoForm, RecursoForm, ProductoForm, ProveedorForm, InventarioForm, RequisicionForm, \
+    OrdenForm, CompraForm, UsuarioForm, ReporteRequisicionesForm, ReporteOrdenesForm, ReporteComprasForm, \
+    UploadFileForm, ConceptoForm, VentaForm, VehiculoForm, TiposVehiculoForm, ProductosForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
-from personas.models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, OrdenCompra, Compra, Usuario, Bitacora
+from personas.models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, OrdenCompra, Compra, \
+    Usuario, Bitacora, Concepto, Venta, Vehiculo, TiposVehiculo
 from django.contrib.auth import logout
 from datetime import datetime
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 
 # Create your views here.
+
+#Para actualizar el logo del formato de orden de compra
+def handle_uploaded_file(f):
+    with open('static/img/logo.png', 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+
+def cambiar_logo(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['Logotipo'])
+            return redirect('inicio')
+    else:
+        form_logo = UploadFileForm()
+    return render(request, 'logotipo/cambiar.html', {'form_logo': form_logo})
 
 
 def ObtenUsuario(request):
@@ -149,12 +169,16 @@ def CrearUsuario(request):
             is_staff=is_staff
 
         )
-
-        usuario.save()
-        messages.add_message( request=request, level=messages.SUCCESS, message="Usuario Creado Exitósamente" )
-        my_group = Group.objects.get( name=grupo ) #obtenemos el grupo seleccionado de los permisos
-        if my_group is not None: #Nos aseguramos que encuentre un valor
-            my_group.user_set.add(usuario) # se agrega el nuevo usuario al grupo
+        valida = 0
+        valida = Usuario.objects.filter(Q(email=usuario.email) | Q(username=usuario.username)).count()
+        if valida == 0:
+            usuario.save()
+            messages.add_message( request=request, level=messages.SUCCESS, message="Usuario Creado Exitósamente" )
+            my_group = Group.objects.get( name=grupo ) #obtenemos el grupo seleccionado de los permisos
+            if my_group is not None: #Nos aseguramos que encuentre un valor
+                my_group.user_set.add(usuario) # se agrega el nuevo usuario al grupo
+        else:
+            messages.add_message( request=request, level=messages.SUCCESS, message="No se pudo guardar. Ya existe un usuario con ese mail o usuario" )
         return redirect('listar_usuarios')
     else:
         usuario_form = UsuarioForm()
@@ -345,7 +369,21 @@ def EliminarProducto(request,id):
                               message="Producto eliminado correctamente: " + producto.nombre )
         return redirect('listar_productos')
     return render(request,'productos/eliminar_producto.html', {'producto':producto})
-
+def ProductoEnUso(request,id):
+    producto = Producto.objects.get( id=id )
+    producto.en_uso='si'
+    producto.save()
+    return 'Producto Modificado'
+def ProductoSinUso(request,id):
+    producto = Producto.objects.get( id=id )
+    req=0
+    req = Requisicion.objects.filter(producto_id=producto.id).count()
+    print(req)
+    if req < 2:
+        producto.en_uso='no'
+        producto.save()
+        return 'Producto Modificado'
+    return 'Producto no Modificado'
 #DEFINICION DE FUNCIONES PARA LOS PROVEEDORES
 @login_required
 def CrearProveedor(request):
@@ -479,11 +517,18 @@ def CrearRequisicion(request):
     if request.user.has_perm("personas.add_requisicion") == False:
         SinPermisos(request)
     if request.method == 'POST':
-        producto = Producto.objects.get(id=request.POST.get('producto_id'))
+        #Obtengo la lista de productos
+        producto = Producto.objects.filter(id__in=request.POST.getlist('productos'))
+        if (request.POST.get('vehiculos') != ""):
+            print("El valor:")
+            print (request.POST.get('vehiculos'))
+            vehiculo = Vehiculo.objects.get(id=request.POST.get('vehiculos'))
+        else:
+            vehiculo = None
         departamento = usuario.departamento_id
         persona = request.user
-        concepto = request.POST.get('concepto')
-        producto_id = request.POST.get('producto_id')
+        recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
+        proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
         descripcion = request.POST.get('descripcion')
         fecha_creacion = datetime.now()
         fecha_estatus = datetime.now()
@@ -492,8 +537,9 @@ def CrearRequisicion(request):
         requisicion = Requisicion(
             departamento_id=departamento,
             persona_id=persona,
-            concepto=concepto,
-            producto_id=producto,
+            recursos_id=recursos_id,
+            proveedor_id=proveedor_id,
+            vehiculo_id=vehiculo,
             descripcion=descripcion,
             estatus=estatus,
             fecha_creacion = fecha_creacion,
@@ -502,35 +548,46 @@ def CrearRequisicion(request):
         )
 
         requisicion.save()
+        for prod in producto:
+            requisicion.producto_id.add(prod.id)
+            ProductoEnUso(request, prod.id)
+        requisicion.save()
+        #SE AGREGA MOVIMIENTO A LA BITACORA
+        pedido = ""
+        for prods in requisicion.producto_id.all():
+            pedido = pedido + str(prods.nombre) +","
         messages.add_message( request=request, level=messages.SUCCESS,
                               message="Requerimiento creado correctamente: " + requisicion.descripcion )
+
         #SE ENVIA CORREO DE NOTIFICACION DE REQUERIMIENTO CREADO HACIA LOS APROBADORES
         aprobadores_mail = []
         aprobadores = Usuario.objects.filter( groups__name__in=['Aprobador'] )
         for aprobador in aprobadores:
             aprobadores_mail.append( aprobador.email )
-        mensaje = "Se ha creado un requerimiendo solicitando: " + str(requisicion.descripcion) + ", creado por:" + str(requisicion.persona_id) + " del departamento de: " + str(requisicion.departamento_id)
+        mensaje = "Se ha creado un requerimiendo solicitando: " + str(pedido) + " " + str(requisicion.descripcion) + ", creado por:" + str(requisicion.persona_id) + " del departamento de: " + str(requisicion.departamento_id)
         Notificar(request,'creacion de requerimiento',mensaje,aprobadores_mail)
         #SE GUARDA A LA BITACORA LA REQUISICION CREADA
         bitacora = Bitacora( fecha_creacion=datetime.now(),
-                             folio=str( requisicion.concepto ) + "(" + str(
-                                 requisicion.producto_id ) + ")",
+                             folio= "(" + str(
+                                 pedido ) + ")",
                              estatus="Requerimiento Creado",
                              usuario=request.user.nombres,
                              tipo_documento="Requerimiento" )
         bitacora.save()
+
         #SE REDIRECCIONA A LA LISTA DE REQUERIMIENTOS DEL USUARIO
         return redirect('listar_requisiciones')
     else:
         requisicion_form = RequisicionForm()
+        catalogos_form = ProductosForm()
 
-    return render(request, 'requisiciones/crear_requisicion.html',{'requisicion_form': requisicion_form,'usuario':usuario})
+    return render(request, 'requisiciones/crear_requisicion.html',{'requisicion_form': requisicion_form,'usuario':usuario,'catalogos_form':catalogos_form})
 @login_required
 def ListarRequisiciones(request):
 
     if request.user.has_perm( "personas.view_requisicion" ) == False:
         SinPermisos( request )
-    requisiciones = Requisicion.objects.filter(estatus='pendiente',persona_id=request.user)
+    requisiciones = Requisicion.objects.filter(persona_id=request.user).exclude(listar='no').order_by('-pk')
     return render(request, 'requisiciones/listar_requisiciones.html', {'requisiciones':requisiciones})
 @login_required
 def EditarRequisicion(request, id):
@@ -546,17 +603,37 @@ def EditarRequisicion(request, id):
         if request.method == 'GET':
             requisicion_form = RequisicionForm(instance=requisicion)
         else:
+            producto = None
             requisicion_form = RequisicionForm(request.POST, instance=requisicion)
             requisicion = Requisicion.objects.get(id=requisicion.id)
-            requisicion.concepto = request.POST.get('concepto')
             requisicion.descripcion = request.POST.get('descripcion')
-            requisicion.producto_id = Producto.objects.get(id = request.POST.get('producto_id'))
+            requisicion.recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
+            requisicion.proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
+            #requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
+            if (request.POST.get( 'vehiculo_id' ) is not None):
+                print( "El valor:" )
+                print( request.POST.get( 'vehiculos' ) )
+                requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculos' ) )
+            else:
+                vehiculo = None
             requisicion.save()
+            #Se agregan los productos a la requisicion
+            producto = Producto.objects.filter( id__in=request.POST.getlist( 'producto_id' ) )
+            if producto is not None:
+                requisicion.producto_id.clear()
+                for prod in producto:
+                    requisicion.producto_id.add( prod.id )
+                    ProductoEnUso( request, prod.id )
+
+            requisicion.save()
+            pedido = ""
+            for prods in requisicion.producto_id.all():
+                pedido = pedido + str( prods.nombre ) + ","
             messages.add_message( request=request, level=messages.SUCCESS,
                                   message="Requerimiento editado correctamente: " + requisicion.descripcion )
             bitacora = Bitacora( fecha_creacion=datetime.now(),
-                                 folio=str( requisicion.concepto ) + "(" + str(
-                                     requisicion.producto_id ) + ")",
+                                 folio= "(" + str(
+                                     pedido ) + ")",
                                  estatus="Requerimiento Editado",
                                  usuario=request.user.nombres,
                                  tipo_documento="Requerimiento" )
@@ -566,7 +643,7 @@ def EditarRequisicion(request, id):
     except ObjectDoesNotExist as e:
         error=e
 
-    return render(request, 'requisiciones/crear_requisicion.html', {'requisicion_form': requisicion_form,'error':error,'usuario':usuario})
+    return render(request, 'requisiciones/crear_requisicion_backup.html', {'requisicion_form': requisicion_form,'error':error,'usuario':usuario, 'requisicion':requisicion})
 @login_required
 def EliminarRequisicion(request,id):
     if request.user.has_perm("personas.delete_requisicion") == False:
@@ -574,13 +651,18 @@ def EliminarRequisicion(request,id):
     usuario = ObtenUsuario( request )
     requisicion = Requisicion.objects.get(id=id)
     if request.method == 'POST':
+        pedido = ""
+        for prods in requisicion.producto_id.all():
+            ProductoSinUso(request,prods.id)
+            pedido = pedido + str( prods.nombre ) + ","
+
         requisicion.delete()
         messages.add_message( request=request, level=messages.SUCCESS,
                               message="Requerimiento eliminado correctamente: " + requisicion.descripcion )
         #Se guarda en la bitacora
         bitacora = Bitacora( fecha_creacion=datetime.now(),
-                             folio=str( requisicion.concepto ) + "(" + str(
-                                 requisicion.producto_id ) + ")",
+                             folio= "(" + str(
+                                 pedido ) + ")",
                              estatus="Requerimiento Eliminado",
                              usuario=request.user.nombres,
                              tipo_documento="Requerimiento" )
@@ -595,16 +677,27 @@ def CancelarRequisicion(request,id):
     requisicion.estatus = 'cancelado'
     requisicion.fecha_estatus = datetime.now()
     requisicion.save()
+    pedido = ""
+    for prods in requisicion.producto_id.all():
+        pedido = pedido + str( prods.nombre ) + ","
     messages.add_message( request=request, level=messages.SUCCESS,
                           message="Requerimiento cancelado correctamente: " + requisicion.descripcion )
     bitacora = Bitacora( fecha_creacion=datetime.now(),
-                         folio=str( requisicion.concepto ) + "(" + str(
-                             requisicion.producto_id ) + ")",
+                         folio= "(" + str(
+                             pedido ) + ")",
                          estatus="Requerimiento Cancelado",
                          usuario=request.user.nombres,
                          tipo_documento="Requerimiento" )
     bitacora.save()
     return redirect('listar_ordenes')
+#CODIGO PARA MANDAR IMPRIMIR LA REQUISICION
+def ImprimirRequisicion(request,id):
+    if request.user.has_perm("personas.view_requisicion") == False:
+        SinPermisos(request)
+    requisicion = None
+    fecha = datetime.now()
+    requisicion = Requisicion.objects.get(id=id)
+    return render(request, 'requisiciones/imprimir_requisicion.html', {'requisicion': requisicion,'fecha':fecha} )
 #ESTA FUNCION CAMBIA EL ESTATUS DE LA FUNCION PARA NO PODER SER ELIMINADA EN EL LISTADO
 @login_required
 def OrdenDeRequisicion(request,id):
@@ -613,6 +706,14 @@ def OrdenDeRequisicion(request,id):
     requisicion.fecha_estatus = datetime.now()
     requisicion.save()
     return ('generado')
+#ESTA FUNCION CAMBIA EL ESTATUS DE LA FUNCION PARA NO PODER SER ELIMINADA EN EL LISTADO
+@login_required
+def TerminarRequisicion(request,id):
+    requisicion = Requisicion.objects.get(id=id)
+    requisicion.listar = 'no'
+    requisicion.fecha_estatus = datetime.now()
+    requisicion.save()
+    return redirect( 'listar_requisiciones' )
 #ESTA FUNCION REGRESA EL ESTATUS A PENDIENTE CUANDO SE ELIMINE UNA ORDEN DE COMPRA
 @login_required
 def LiberarRequisicion(request,id):
@@ -637,11 +738,10 @@ def CrearOrden(request,id=None):
     if request.method == 'POST':
         requerimiento_id = requisicion
         aprobador_id = usuario
-        recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
+        recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id') )
         proveedor_id = Proveedor.objects.get(id=request.POST.get('proveedor_id'))
-        producto_id = requisicion.producto_id
-        descripcion = request.POST.get('descripcion')
-        estatus = 'pendiente'
+        descripcion = requisicion.descripcion
+        estatus = 'autorizado'
         cantidad = request.POST.get('cantidad_prod')
         precio_unitario = request.POST.get('precio_unitario')
         precio_total = request.POST.get('precio_total')
@@ -651,7 +751,6 @@ def CrearOrden(request,id=None):
             aprobador_id=aprobador_id,
             recursos_id=recursos_id,
             proveedor_id=proveedor_id,
-            producto_id=producto_id,
             cantidad_prod=cantidad,
             precio_unitario=precio_unitario,
             precio_total=precio_total,
@@ -667,9 +766,13 @@ def CrearOrden(request,id=None):
                               message="Orden creada correctamente: " + orden.descripcion )
         cambiado = OrdenDeRequisicion(request, requerimiento_id.id)
         #SE AGREGA A LA BITACORA
+        pedido = ""
+        for prods in requisicion.producto_id.all():
+            pedido = pedido + str(prods.nombre) +","
+
         bitacora = Bitacora( fecha_creacion=datetime.now(),
                              folio=str( orden.proveedor_id ) + "(" + str(
-                                 orden.producto_id ) +" " + str(
+                                 pedido ) +" " + str(
                                  orden.cantidad_prod ) + ")",
                              estatus="Orden Creada",
                              usuario=request.user.nombres,
@@ -677,13 +780,16 @@ def CrearOrden(request,id=None):
         bitacora.save()
         #SE NOTIFICA A LOS REQUISITORES POR CORREO
         destinatario = (requisicion.persona_id.email,)
-        mensaje = "Se ha aprobado su solicitud de compra con descrpcion: " + str( requisicion.descripcion ) + " y concepto: " + str( requisicion.concepto )
+        mensaje = "Se ha aprobado su solicitud de compra con descripción: " + str( pedido ) + ", " + str( requisicion.descripcion )
         Notificar( request, 'Aprobacion de requerimiento', mensaje, destinatario )
         return redirect('listar_ordenes')
     else:
         orden_form = OrdenForm()
+        recursos = Recurso.objects.all()
+        proveedores = Proveedor.objects.all()
 
-    return render(request, 'ordenes/crear_orden.html',{'orden_form': orden_form,'usuario':usuario,'requisicion':requisicion})
+
+    return render(request, 'ordenes/crear_orden.html',{'orden_form': orden_form,'usuario':usuario,'requisicion':requisicion,'recursos':recursos,'proveedores':proveedores })
 
 @login_required
 def ListarOrdenes(request):
@@ -691,8 +797,8 @@ def ListarOrdenes(request):
         SinPermisos(request)
     requisiciones_l = None
     ordenes_l = None
-    requisiciones_l = Requisicion.objects.filter( estatus='pendiente', persona_id=request.user )
-    ordenes_l = OrdenCompra.objects.filter( aprobador_id=request.user, estatus='pendiente' )
+    requisiciones_l = Requisicion.objects.filter( estatus='pendiente' ).order_by('-pk')
+    ordenes_l = OrdenCompra.objects.filter( aprobador_id=request.user, estatus='autorizado' ).order_by('-pk')
 
     return render(request, 'ordenes/listar_ordenes.html', {'requisiciones':requisiciones_l,'ordenes': ordenes_l})
 @login_required
@@ -714,9 +820,12 @@ def EditarOrden(request, id):
                 messages.add_message( request=request, level=messages.SUCCESS,
                                       message="Orden editada correctamente: " + orden_form.cleaned_data['descripcion'] )
                 #SE AGREGA EL MOVIMIENTO A LA BITACORA
+                pedido = ""
+                for prods in requisicion.producto_id.all():
+                    pedido = pedido + str( prods.nombre ) + ","
                 bitacora = Bitacora( fecha_creacion=datetime.now(),
                                      folio=str( orden_form.cleaned_data['proveedor_id'] ) + "(" + str(
-                                         requisicion.producto_id ) + str(
+                                         pedido ) + str(
                                          orden_form.cleaned_data['cantidad_prod'] ) + ")",
                                      estatus="Orden Editada",
                                      usuario=request.user.nombres,
@@ -726,7 +835,7 @@ def EditarOrden(request, id):
     except ObjectDoesNotExist as e:
         error=e
 
-    return render(request, 'ordenes/crear_orden.html', {'orden_form': orden_form,'error':error,'requisicion':requisicion})
+    return render(request, 'ordenes/editar_orden.html', {'orden_form': orden_form,'error':error,'requisicion':requisicion})
 @login_required
 def EliminarOrden(request,id):
     if request.user.has_perm("personas.delete_ordencompra") == False:
@@ -739,9 +848,12 @@ def EliminarOrden(request,id):
         messages.add_message( request=request, level=messages.SUCCESS,
                               message="Orden eliminada correctamente: " + orden.descripcion )
         # SE AGREGA EL MOVIMIENTO A LA BITACORA
+        pedido = ""
+        for prods in orden.requerimiento_id.producto_id.all():
+            pedido = pedido + str( prods.nombre ) + ","
         bitacora = Bitacora( fecha_creacion=datetime.now(),
                              folio=str( orden.proveedor_id ) + "(" + str(
-                                 orden.producto_id ) + str(
+                                 pedido ) + str(
                                  orden.cantidad_prod ) + ")",
                              estatus="Orden Eliminada",
                              usuario=request.user.nombres,
@@ -760,9 +872,12 @@ def CancelarOrden(request,id):
     messages.add_message( request=request, level=messages.SUCCESS,
                           message="Orden cancelada correctamente: " + orden.descripcion )
     # SE AGREGA EL MOVIMIENTO A LA BITACORA
+    pedido = ""
+    for prods in orden.requerimiento_id.producto_id.all():
+        pedido = pedido + str( prods.nombre ) + ","
     bitacora = Bitacora( fecha_creacion=datetime.now(),
                          folio=str( orden.proveedor_id ) + "(" + str(
-                             orden.producto_id ) + str(
+                             pedido ) + str(
                              orden.cantidad_prod ) + ")",
                          estatus="Orden Cancelada",
                          usuario=request.user.nombres,
@@ -843,9 +958,12 @@ def CrearCompra(request,id=None):
         messages.add_message( request=request, level=messages.SUCCESS,
                               message="Compra creada correctamente: " + compra.descripcion )
         # SE AGREGA EL MOVIMIENTO A LA BITACORA
+        pedido = ""
+        for prods in compra.ordenCompra_id.requerimiento_id.producto_id.all():
+            pedido = pedido + str( prods.nombre ) + ","
         bitacora = Bitacora( fecha_creacion=datetime.now(),
                              folio=str( compra.ordenCompra_id.proveedor_id ) + "(" + str(
-                                 compra.ordenCompra_id.producto_id ) + str(
+                                 pedido ) + str(
                                  compra.ordenCompra_id.cantidad_prod ) + ")",
                              estatus="Compra Creada",
                              usuario=request.user.nombres,
@@ -865,8 +983,8 @@ def ListarCompras(request):
     ordenes = None
     compras = None
     valores = ('pendiente,pagado')
-    ordenes = OrdenCompra.objects.filter(Q(estatus = 'pendiente'))
-    compras = Compra.objects.filter(Q(estatus = 'pendiente') | Q(estatus='pagado'))
+    ordenes = OrdenCompra.objects.filter(Q(estatus = 'autorizado')).order_by('-pk')
+    compras = Compra.objects.filter(Q(estatus = 'pendiente') | Q(estatus='pagado')).order_by('-pk')
     return render(request, 'compras/listar_compras.html', {'ordenes':ordenes, 'compras':compras})
 @login_required
 def EditarCompra(request, id):
@@ -887,9 +1005,12 @@ def EditarCompra(request, id):
                 messages.add_message( request=request, level=messages.SUCCESS,
                                       message="Compra editada correctamente: " + compra_form.cleaned_data['descripcion'] )
                 # SE AGREGA EL MOVIMIENTO A LA BITACORA
+                pedido = ""
+                for prods in compra.ordenCompra_id.requerimiento_id.producto_id.all():
+                    pedido = pedido + str( prods.nombre ) + ","
                 bitacora = Bitacora( fecha_creacion=datetime.now(),
                                      folio=str( compra.ordenCompra_id.proveedor_id ) + "(" + str(
-                                         compra.ordenCompra_id.producto_id ) + str(
+                                         pedido ) + str(
                                          compra.ordenCompra_id.cantidad_prod ) + ")",
                                      estatus="Compra Editada",
                                      usuario=request.user.nombres,
@@ -912,9 +1033,12 @@ def EliminarCompra(request,id):
         messages.add_message( request=request, level=messages.SUCCESS,
                               message="Compra eliminada correctamente: " + compra.descripcion )
         # SE AGREGA EL MOVIMIENTO A LA BITACORA
+        pedido = ""
+        for prods in compra.ordenCompra_id.requerimiento_id.producto_id.all():
+            pedido = pedido + str( prods.nombre ) + ","
         bitacora = Bitacora( fecha_creacion=datetime.now(),
                              folio=str( compra.ordenCompra_id.proveedor_id ) + "(" + str(
-                                 compra.ordenCompra_id.producto_id ) + str(
+                                 pedido ) + str(
                                  compra.ordenCompra_id.cantidad_prod ) + ")",
                              estatus="Compra Eliminada",
                              usuario=request.user.nombres,
@@ -931,9 +1055,12 @@ def CancelarCompra(request,id):
     compra.fecha_estatus = datetime.now()
     compra.save()
     # SE AGREGA EL MOVIMIENTO A LA BITACORA
+    pedido = ""
+    for prods in compra.ordenCompra_id.requerimiento_id.producto_id.all():
+        pedido = pedido + str( prods.nombre ) + ","
     bitacora = Bitacora( fecha_creacion=datetime.now(),
                          folio=str( compra.ordenCompra_id.proveedor_id ) + "(" + str(
-                             compra.ordenCompra_id.producto_id ) + str(
+                             pedido ) + str(
                              compra.ordenCompra_id.cantidad_prod ) + ")",
                          estatus="Compra Cancelada",
                          usuario=request.user.nombres,
@@ -950,9 +1077,12 @@ def TerminarCompra(request,id):
     compra.fecha_estatus = datetime.now()
     compra.save()
     # SE AGREGA EL MOVIMIENTO A LA BITACORA
+    pedido = ""
+    for prods in compra.ordenCompra_id.requerimiento_id.producto_id.all():
+        pedido = pedido + str( prods.nombre ) + ","
     bitacora = Bitacora( fecha_creacion=datetime.now(),
                          folio=str( compra.ordenCompra_id.proveedor_id ) + "(" + str(
-                             compra.ordenCompra_id.producto_id ) + str(
+                             pedido ) + str(
                              compra.ordenCompra_id.cantidad_prod ) + ")",
                          estatus="Compra Terminada",
                          usuario=request.user.nombres,
@@ -984,15 +1114,8 @@ def ReporteRequerimientos(request):
                         'productos': productos} )
     else:
 
+        Query = Requisicion.objects.filter( descripcion__contains=request.POST.get( 'descripcion' ))
         fecha_creacion = request.POST.get( 'fecha_creacion' )
-
-        descripcion = request.POST.get( 'descripcion' )
-
-        Query = Requisicion.objects.filter( descripcion__contains=descripcion)
-        producto = request.POST.get( 'producto_id' )
-
-        usuario = request.POST.get( 'persona_id' )
-        estatus = request.POST.get( 'estatus' )
         if len(fecha_creacion) > 2:
 
             fechas = fecha_creacion.split( ' ' )
@@ -1000,15 +1123,20 @@ def ReporteRequerimientos(request):
             fecha_f = datetime.strptime( fechas[2], '%d-%m-%Y' )
             Query = Query.filter( fecha_creacion__range=[fecha_i, fecha_f] )
 
-        if producto != 'todos':
-            Query = Query.filter(producto_id=producto)
+        if request.POST.get( 'departamento_id' ) != 'todos':
+            Query = Query.filter( departamento_id=request.POST.get( 'departamento_id' ) )
 
-        if usuario != 'todos':
-            Query = Query.filter( producto_id=usuario)
-        if estatus != 'todos':
-            Query = Query.filter(estatus=estatus)
+        if request.POST.get( 'producto_id' ) != 'todos':
+            producto = Producto.objects.filter( id=request.POST.get( 'producto_id' ) )
+            Query = Query.filter(producto_id__in=producto)
 
+        if request.POST.get( 'persona_id' ) != 'todos':
+            Query = Query.filter( persona_id=request.POST.get( 'persona_id' ))
 
+        if request.POST.get( 'estatus' ) != 'todos':
+            Query = Query.filter(estatus=request.POST.get( 'estatus' ))
+
+        Query = Query.order_by('-pk')
         requisiciones = Query
         return render(
             request,
@@ -1052,9 +1180,10 @@ def ReporteOrdenes(request):
 
 
         Query = OrdenCompra.objects.filter(descripcion__contains=descripcion)
-        producto = request.POST.get( 'producto_id' )
-        recursos = request.POST.get( 'recurso_id' )
+        #producto = request.POST.get( 'producto_id' )
+        recurso = request.POST.get( 'recurso_id' )
         usuario = request.POST.get( 'aprobador_id' )
+
         estatus = request.POST.get( 'estatus' )
         if len(fecha_creacion) > 2:
 
@@ -1062,16 +1191,27 @@ def ReporteOrdenes(request):
             fecha_i = datetime.strptime( fechas[0], '%d-%m-%Y' )
             fecha_f = datetime.strptime( fechas[2], '%d-%m-%Y' )
             Query = Query.filter(fecha_creacion__range=[fecha_i, fecha_f] )
-        if producto != 'todos':
-            Query = Query.filter(producto_id=producto)
-        if recursos != 'todos':
-            Query = Query.filter(recursos_id=recursos)
+
+        if request.POST.get( 'producto_id' ) != 'todos':
+            producto = Producto.objects.filter( id=request.POST.get( 'producto_id' ) )
+            req = None
+            req = Requisicion.objects.filter(producto_id__in=producto)
+            Query = Query.filter( requerimiento_id__in=req )
+
+        if request.POST.get( 'departamento_id' ) != 'todos':
+            dep = Departamento.objects.get( id=request.POST.get( 'departamento_id' ) )
+            req = None
+            req = Requisicion.objects.filter( departamento_id=dep.id )
+            Query = Query.filter(requerimiento_id__in=req)
+
+        if recurso != 'todos':
+            Query = Query.filter(recursos_id=recurso)
         if usuario != 'todos':
             Query = Query.filter( aprobador_id=usuario)
         if estatus != 'todos':
             Query = Query.filter(estatus=estatus)
 
-
+        Query = Query.order_by( '-pk' )
         ordenes = Query
         #fecha_hoy = str( fecha_i.strftime( "%d-%M-%Y" ) ) + " - " + str( fecha_f.strftime( "%d-%M-%Y" ) )
         return render(
@@ -1120,11 +1260,15 @@ def ReporteCompras(request):
         producto = request.POST.get( 'producto_id' )
         usuario = request.POST.get( 'aprobador_id' )
         estatus = request.POST.get( 'estatus' )
-        departamento = request.POST.get( 'departamento_id' )
-        # if departamento != 'todos':
-        #    Query = Query.filter(producto_id=producto)
-        #if producto != 'todos':
-        #    Query = Query.filter(producto_id=producto)
+
+
+        if request.POST.get( 'departamento_id' ) != 'todos':
+            dep = Departamento.objects.get( id=request.POST.get( 'departamento_id' ) )
+            req = None
+            req = Requisicion.objects.filter( departamento_id=dep.id )
+            ord = OrdenCompra.objects.filter(requerimiento_id__in=req)
+            Query = Query.filter(ordenCompra_id__in=ord)
+
         if len(fecha_creacion) > 2:
 
             fechas = fecha_creacion.split( ' ' )
@@ -1138,7 +1282,7 @@ def ReporteCompras(request):
         if estatus != 'todos':
             Query = Query.filter(estatus=estatus)
 
-
+        Query = Query.order_by( '-pk' )
         compras = Query
         return render(
             request,
@@ -1151,9 +1295,350 @@ def ReporteCompras(request):
                         'departamentos':departamentos,
                         'productos': productos
                         } )
+
+@login_required
+def ReporteVehiculos(request):
+    if request.user.has_perm("personas.view_ordencompra") == False:
+        SinPermisos(request)
+    ReporteOrden_form = None
+    error = None
+    orden = OrdenCompra()
+    departamentos = Departamento.objects.all()
+    personas = Usuario.objects.all()
+    productos = Producto.objects.filter(id__in=[3,5,13,19,21])
+    recursos = Recurso.objects.all()
+    vehiculos = Vehiculo.objects.all()
+
+    if request.method == 'GET':
+        ReporteOrden_form = ReporteOrdenesForm( instance=orden )
+        ordenes = OrdenCompra.objects.all()
+        return render( request,
+                       'reportes_vehiculos/listar_ordenes.html',
+                       {
+                        'ReporteOrden_form': ReporteOrden_form,
+                        'personas':personas,
+                        'departamentos':departamentos,
+                        'productos': productos,
+                        'recursos':recursos,
+                        'vehiculos':vehiculos} )
+    else:
+
+        fecha_creacion = request.POST.get( 'fecha_creacion',None)
+        descripcion = request.POST.get( 'descripcion' )
+
+        Query = OrdenCompra.objects.filter(descripcion__contains=descripcion)
+        recurso = request.POST.get( 'recurso_id' )
+        usuario = request.POST.get( 'aprobador_id' )
+
+
+
+        estatus = request.POST.get( 'estatus' )
+        if len(fecha_creacion) > 2:
+
+            fechas = fecha_creacion.split( ' ' )
+            fecha_i = datetime.strptime( fechas[0], '%d-%m-%Y' )
+            fecha_f = datetime.strptime( fechas[2], '%d-%m-%Y' )
+            Query = Query.filter(fecha_creacion__range=[fecha_i, fecha_f] )
+
+        if request.POST.get( 'producto_id' ) != 'todos':
+            producto = Producto.objects.filter( id=request.POST.get( 'producto_id' ) )
+            req = None
+            req = Requisicion.objects.filter(producto_id__in=producto)
+            Query = Query.filter( requerimiento_id__in=req )
+        else:
+            req = None
+            req = Requisicion.objects.filter( producto_id__in=productos )
+            Query = Query.filter( requerimiento_id__in=req )
+
+        if request.POST.get( 'departamento_id' ) != 'todos':
+            dep = Departamento.objects.get( id=request.POST.get( 'departamento_id' ) )
+            req = None
+            req = Requisicion.objects.filter( departamento_id=dep.id )
+            Query = Query.filter(requerimiento_id__in=req)
+
+        if request.POST.get( 'vehiculo_id' ) != 'todos':
+            vehiculo = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
+            req = None
+            req = Requisicion.objects.filter( vehiculo_id=vehiculo.id )
+            Query = Query.filter(requerimiento_id__in=req)
+
+        #req = Requisicion.objects.filter(vehiculo_id>0)
+        #Query = Query.filter( requerimiento_id__in=req )
+
+        if recurso != 'todos':
+            Query = Query.filter(recursos_id=recurso)
+        if usuario != 'todos':
+            Query = Query.filter( aprobador_id=usuario)
+        if estatus != 'todos':
+            Query = Query.filter(estatus=estatus)
+
+        Query = Query.order_by( '-pk' )
+        ordenes = Query
+        return render(
+            request,
+            'reportes_vehiculos/listar_ordenes.html',
+
+                       {''
+                        'ordenes': ordenes,
+                        'ReporteOrden_form': ReporteOrden_form,
+                        'personas':personas,
+                        'departamentos':departamentos,
+                        'productos': productos,
+                        'recursos':recursos,
+                        'vehiculos':vehiculos
+                        })
+
 @login_required
 def ListarBitacora(request):
     if request.user.has_perm("personas.view_bitacora") == False:
         SinPermisos(request)
+    #bitacoras = Bitacora.objects.all().order_by('-fecha_creacion')
+    #return render(request, 'bitacora/listar_bitacora.html', {'bitacoras':bitacoras})
+
+    if request.method == 'POST':
+        fecha_creacion = request.POST.get( 'fecha_creacion', None )
+        if len( fecha_creacion ) > 2:
+            fechas = fecha_creacion.split( ' ' )
+            fecha_i = datetime.strptime( fechas[0], '%d-%m-%Y' )
+            fecha_f = datetime.strptime( fechas[2], '%d-%m-%Y' )
+            bitacoras = Bitacora.objects.filter(fecha_creacion__range=[fecha_i, fecha_f])
+            #Query = Bitacora.filter( fecha_creacion__range=[fecha_i, fecha_f] )
+            #bitacoras = Query
+            return render( request, 'bitacora/listar_bitacora.html', {'bitacoras': bitacoras} )
+    #SI NO SE MANDAN TODAS LA BITACORAS
     bitacoras = Bitacora.objects.all()
-    return render(request, 'bitacora/listar_bitacora.html', {'bitacoras':bitacoras})
+    return render( request, 'bitacora/listar_bitacora.html', {'bitacoras': bitacoras} )
+
+##CREACION DE FUNCIONES PARA CONCEPTO#DEFINICION DE FUNCIONES PARA LOS RECURSOS
+def CrearConcepto(request):
+    if request.user.has_perm("personas.add_concepto") == False:
+        SinPermisos(request)
+    if request.method == 'POST':
+        concepto_form = ConceptoForm(request.POST)
+        if concepto_form.is_valid():
+            concepto_form.save()
+            messages.add_message( request=request, level=messages.SUCCESS,
+                                  message="Concepto agregado correctamente: " + concepto_form.cleaned_data['nombre'] )
+            return redirect('listar_conceptos')
+    else:
+        concepto_form = ConceptoForm()
+    return render(request, 'conceptos/crear_concepto.html',{'concepto_form': concepto_form})
+@login_required
+def ListarConceptos(request):
+    if request.user.has_perm("personas.view_concepto") == False:
+        SinPermisos(request)
+    conceptos = Concepto.objects.all()
+    return render(request, 'conceptos/listar_conceptos.html', {'conceptos':conceptos })
+@login_required
+def EditarConcepto(request, id):
+    if request.user.has_perm("personas.change_concepto") == False:
+        SinPermisos(request)
+    concepto_form = None
+    error = None
+    try:
+        concepto = Concepto.objects.get( id=id)
+
+        if request.method == 'GET':
+            concepto_form = ConceptoForm( instance=concepto )
+        else:
+            concepto_form = ConceptoForm( request.POST, instance=concepto )
+            if concepto_form.is_valid():
+                concepto_form.save()
+                messages.add_message( request=request, level=messages.SUCCESS,
+                                      message="Concepto editado correctamente: " + concepto_form.cleaned_data['nombre'] )
+            return redirect( 'listar_conceptos' )
+    except ObjectDoesNotExist as e:
+        error=e
+
+    return render(request, 'conceptos/crear_concepto.html', {'concepto_form': concepto_form,'error':error})
+@login_required
+def EliminarConcepto(request,id):
+    if request.user.has_perm("personas.delete_concepto") == False:
+        SinPermisos(request)
+    concepto = Concepto.objects.get(id=id)
+    if request.method == 'POST':
+        concepto.delete()
+        messages.add_message( request=request, level=messages.SUCCESS,
+                              message="Concepto eliminado correctamente: " + concepto.nombre )
+        return redirect('listar_conceptos')
+    return render(request,'conceptos/eliminar_concepto.html', {'concepto':concepto})
+
+##CREACION DE FUNCIONES PARA LAS VENTAS
+def CrearVenta(request):
+    if request.user.has_perm("personas.add_venta") == False:
+        SinPermisos(request)
+    if request.method == 'POST':
+        venta_form = VentaForm(request.POST)
+        if venta_form.is_valid():
+            venta_form.save()
+            messages.add_message( request=request, level=messages.SUCCESS,
+                                  message="Venta agregada correctamente: " + venta_form.cleaned_data['id'] )
+            return redirect('listar_ventas')
+    else:
+        venta_form = VentaForm()
+        conceptos = Concepto.objects.all()
+        fecha = datetime.now().strftime("%d-%m-%Y %H:%M")
+    return render(request, 'ventas/crear_venta.html',{'venta_form': venta_form,'conceptos':conceptos, 'fecha':fecha})
+@login_required
+def ListarVentas(request):
+    if request.user.has_perm("personas.view_venta") == False:
+        SinPermisos(request)
+    ventas = Venta.objects.all()
+    return render(request, 'ventas/listar_ventas.html', {'ventas':ventas })
+@login_required
+def EditarVenta(request, id):
+    if request.user.has_perm("personas.change_venta") == False:
+        SinPermisos(request)
+    venta_form = None
+    error = None
+    try:
+        venta = Venta.objects.get( id=id)
+
+        if request.method == 'GET':
+            venta_form = VentaForm( instance=venta )
+        else:
+            venta_form = VentaForm( request.POST, instance=venta )
+            if venta_form.is_valid():
+                venta_form.save()
+                messages.add_message( request=request, level=messages.SUCCESS,
+                                      message="Venta editada correctamente: " + venta_form.cleaned_data['id'] )
+            return redirect( 'listar_ventas' )
+    except ObjectDoesNotExist as e:
+        error=e
+
+    return render(request, 'ventas/crear_venta.html', {'venta_form': venta_form,'error':error})
+@login_required
+def EliminarVenta(request,id):
+    if request.user.has_perm("personas.delete_venta") == False:
+        SinPermisos(request)
+    venta = Venta.objects.get(id=id)
+    if request.method == 'POST':
+        venta.delete()
+        messages.add_message( request=request, level=messages.SUCCESS,
+                              message="La venta se ha eliminado correctamente: " + venta.id )
+        return redirect('listar_ventass')
+    return render(request,'ventas/eliminar_venta.html', {'venta':venta})
+##CREACION DE FUNCIONES PARA LOS TIPOS DE VEHICULOS
+def CrearTiposVehiculo(request):
+    if request.user.has_perm("personas.add_tiposvehiculo") == False:
+        SinPermisos(request)
+    if request.method == 'POST':
+        tiposvehiculo_form = TiposVehiculoForm(request.POST)
+        if tiposvehiculo_form.is_valid():
+            tiposvehiculo_form.save()
+            messages.add_message( request=request, level=messages.SUCCESS,
+                                  message="Tipo agregado correctamente: " + tiposvehiculo_form.cleaned_data['nombre'] )
+            return redirect('listar_tiposvehiculos')
+    else:
+        tiposvehiculo_form = TiposVehiculoForm()
+    return render(request, 'tiposvehiculo/crear_tiposvehiculo.html',{'tiposvehiculo_form': tiposvehiculo_form})
+@login_required
+def ListarTiposVehiculos(request):
+    if request.user.has_perm("personas.view_tiposvehiculo") == False:
+        SinPermisos(request)
+    tiposvehiculos = TiposVehiculo.objects.all()
+    return render(request, 'tiposvehiculo/listar_tiposvehiculos.html', {'tiposvehiculos':tiposvehiculos })
+@login_required
+def EditarTiposVehiculo(request, id):
+    if request.user.has_perm("personas.change_tiposvehiculo") == False:
+        SinPermisos(request)
+    tiposvehiculo_form = None
+    error = None
+    try:
+        tiposvehiculo = TiposVehiculo.objects.get( id=id)
+
+        if request.method == 'GET':
+            tiposvehiculo_form = TiposVehiculoForm( instance=tiposvehiculo )
+        else:
+            tiposvehiculo_form = TiposVehiculoForm( request.POST, instance=tiposvehiculo )
+            if tiposvehiculo_form.is_valid():
+                tiposvehiculo_form.save()
+                messages.add_message( request=request, level=messages.SUCCESS,
+                                      message="Tipo editado correctamente: " + tiposvehiculo_form.cleaned_data['nombre'] )
+            return redirect( 'listar_tiposvehiculos' )
+    except ObjectDoesNotExist as e:
+        error=e
+
+    return render(request, 'tiposvehiculo/crear_tiposvehiculo.html', {'tiposvehiculo_form': tiposvehiculo_form,'error':error})
+@login_required
+def EliminarTiposVehiculo(request,id):
+    if request.user.has_perm("personas.delete_tiposvehiculo") == False:
+        SinPermisos(request)
+    tiposvehiculo = TiposVehiculo.objects.get(id=id)
+    if request.method == 'POST':
+        tiposvehiculo.delete()
+        messages.add_message( request=request, level=messages.SUCCESS,
+                              message="Tipo de vehiculo eliminado correctamente: " + tiposvehiculo.nombre )
+        return redirect('listar_tiposvehiculos')
+    return render(request,'tiposvehiculo/eliminar_tiposvehiculo.html', {'tiposvehiculo':tiposvehiculo})
+
+#FUNCIONES PARA ADMINISTRAR LOS VEHICULOS
+@login_required
+def CrearVehiculo(request):
+    if request.user.has_perm("personas.add_vehiculo") == False:
+        SinPermisos(request)
+    if request.method == 'POST':
+        vehiculo_form = VehiculoForm(request.POST)
+        if vehiculo_form.is_valid():
+            vehiculo_form.save()
+            bitacora = Bitacora(fecha_creacion=datetime.now(),folio = str(vehiculo_form.cleaned_data['nombre']) +"("+ str(vehiculo_form.cleaned_data['departamento_id']) + ")",estatus="Auto Agregado",usuario=request.user.nombres,tipo_documento="inventario vehiculo")
+            bitacora.save()
+            messages.add_message( request=request, level=messages.SUCCESS,
+                                  message="Auto agregado correctamente: " + vehiculo_form.cleaned_data['nombre'] )
+            return redirect('listar_vehiculos')
+    else:
+        vehiculo_form = VehiculoForm()
+    return render(request, 'vehiculos/crear_vehiculo.html',{'vehiculo_form': vehiculo_form})
+@login_required
+def ListarVehiculo(request):
+    if request.user.has_perm("personas.view_vehiculo") == False:
+        SinPermisos(request)
+    vehiculos = Vehiculo.objects.all()
+    return render(request, 'vehiculos/listar_vehiculos.html', {'vehiculos':vehiculos})
+@login_required
+def EditarVehiculo(request, id):
+    if request.user.has_perm("personas.change_vehiculo") == False:
+        SinPermisos(request)
+    vehiculo_form = None
+    error = None
+    try:
+        vehiculo = Vehiculo.objects.get(id=id)
+
+        if request.method == 'GET':
+            vehiculo_form = VehiculoForm( instance=vehiculo )
+        else:
+            vehiculo_form = VehiculoForm( request.POST, instance=vehiculo )
+            if vehiculo_form.is_valid():
+                vehiculo_form.save()
+                messages.add_message( request=request, level=messages.SUCCESS,
+                                      message="Auto editado correctamente: " + vehiculo_form.cleaned_data[
+                                          'nombre'] )
+                bitacora = Bitacora( fecha_creacion=datetime.now(),
+                                     folio=str( vehiculo_form.cleaned_data['nombre'] ) + "(" + str(
+                                         vehiculo_form.cleaned_data['departamento_id'] ) + ")",
+                                     estatus="Vehiculo Editado",
+                                     usuario=request.user.nombres,
+                                     tipo_documento="inventario vehiculo" )
+                bitacora.save()
+            return redirect( 'listar_vehiculos' )
+    except ObjectDoesNotExist as e:
+        error=e
+
+    return render(request, 'vehiculos/crear_vehiculo.html', {'vehiculo_form': vehiculo_form,'error':error})
+@login_required
+def EliminarVehiculo(request,id):
+    if request.user.has_perm("personas.delete_vehiculo") == False:
+        SinPermisos(request)
+    vehiculo = Vehiculo.objects.get(id=id)
+    if request.method == 'POST':
+        bitacora = Bitacora( fecha_creacion=datetime.now(),
+                             folio=str( vehiculo.nombre ) + "(" + str(
+                                 vehiculo.departamento_id ) + ")",
+                             estatus="Vehiculo Eliminado",
+                             usuario=request.user.nombres, tipo_documento="inventario vehiculo" )
+        bitacora.save()
+        vehiculo.delete()
+        messages.add_message( request=request, level=messages.SUCCESS,
+                              message="vehiculo eliminado correctamente: " + vehiculo.nombre )
+        return redirect('listar_vehiculos')
+    return render(request, 'vehiculos/eliminar_vehiculo.html', {'vehiculo':vehiculo})
