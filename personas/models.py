@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth.hashers import make_password
 
 # Create your models here.
+from django.forms import model_to_dict
+
 
 class UsuarioManager(BaseUserManager):
     def _create_user(self,username, email, nombres, apellidos, password, is_staff, is_superuser,**extra_fields):
@@ -232,9 +234,17 @@ class Bitacora(models.Model):
 
 class Concepto(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField('Nombre del Concepto', max_length=45, null=True, blank=False)
-    clave = models.TextField('Clave', max_length=250, null=False, blank=False)
+    nombre = models.CharField('Nombre del Concepto', default=None, max_length=45, null=False, blank=False)
+    clave = models.CharField('Clave', default=None, max_length=50, null=False, blank=False)
+    precio = models.CharField('Precio', default=0, max_length=20, null=False, blank=False )
     fecha_creacion = models.DateField('Fecha de Creacion', auto_now=True, auto_created=True)
+
+    def toJSON(self):
+        item = model_to_dict( self )
+        item['nombre'] = self.nombre
+        item['clave'] = self.clave
+        item['precio'] = format( int(self.precio), '.2f' )
+        return item
 
     class Meta:
         verbose_name = 'Concepto'

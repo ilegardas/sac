@@ -443,7 +443,7 @@ class ReporteComprasForm(forms.ModelForm):
 class ConceptoForm(forms.ModelForm):
     class Meta:
         model = Concepto
-        fields = ['nombre', 'clave']
+        fields = ['nombre', 'clave','precio']
         widgets = {
             'nombre': forms.TextInput(
                 attrs={
@@ -453,6 +453,13 @@ class ConceptoForm(forms.ModelForm):
 
             ),
             'clave': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'precio': forms.TextInput(
                 attrs={
                     'class': 'form-control form-control-user'
 
@@ -488,12 +495,6 @@ class VentaForm(forms.ModelForm):
 
                 }
 
-            ),
-            'fecha_creacion': forms.DateInput(
-                attrs={
-                    'class': 'form-control'
-
-                }
             )
         }
 class TiposVehiculoForm(forms.ModelForm):
@@ -587,3 +588,8 @@ class ProductosForm(forms.Form):
         'initial':'vacio'
 
     }))
+#Para obtener selec de conceptos
+class ConceptosForm(forms.Form):
+    concepto = forms.ModelChoiceField( queryset=Concepto.objects.all(), widget=forms.Select( attrs={
+        'class': 'form-control select2'
+    } ) )

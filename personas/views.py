@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
 from personas.forms import DepartamentoForm, RecursoForm, ProductoForm, ProveedorForm, InventarioForm, RequisicionForm, \
     OrdenForm, CompraForm, UsuarioForm, ReporteRequisicionesForm, ReporteOrdenesForm, ReporteComprasForm, \
-    UploadFileForm, ConceptoForm, VentaForm, VehiculoForm, TiposVehiculoForm, ProductosForm
+    UploadFileForm, ConceptoForm, VentaForm, VehiculoForm, TiposVehiculoForm, ProductosForm, ConceptosForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
 from personas.models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, OrdenCompra, Compra, \
@@ -14,10 +14,19 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+import json
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.core import serializers
+#from django.http import HttpResponseRedirect
+
 
 # Create your views here.
-
+@method_decorator(csrf_exempt)
+@method_decorator(login_required)
+def dispatch(self, request, *args, **kwargs):
+    return super().dispatch(request, *args, **kwargs)
 #Para actualizar el logo del formato de orden de compra
 def handle_uploaded_file(f):
     with open('static/img/logo.png', 'wb+') as destination:
@@ -1467,6 +1476,33 @@ def EliminarConcepto(request,id):
 def CrearVenta(request):
     if request.user.has_perm("personas.add_venta") == False:
         SinPermisos(request)
+    data = {}
+    if request.method == 'POST' and request.POST['action']=='autocomplete' :
+        data = {}
+
+        try:
+            action = request.POST['action']
+
+            if action == 'autocomplete':
+                data = []
+                print("Busqueda: " + request.POST.get('term'))
+                for i in Concepto.objects.filter( Q(nombre__icontains=request.POST['term']) | Q(clave__icontains=request.POST['term']) )[0:10]:
+                    item = i.toJSON()
+                    item['text'] = i.nombre
+                    data.append( item )
+
+                #for i in Concepto.objects.filter(nombre__icontains=request.POST['term'])[0:10]:
+                #    item =serializers.serialize( "json", i )
+                #    #item = []
+                #    item['text'] = i.nombre
+                #    data.append(item)
+            else:
+                data['error'] = 'Ha ocurrido un error'
+        except Exception as e:
+            data['error'] = str(e)
+            print(data['error'])
+        return JsonResponse( data, safe=False )
+
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)
         if venta_form.is_valid():
@@ -1476,7 +1512,8 @@ def CrearVenta(request):
             return redirect('listar_ventas')
     else:
         venta_form = VentaForm()
-        conceptos = Concepto.objects.all()
+        conceptos = ConceptosForm()
+        #conceptos = Concepto.objects.all()
         fecha = datetime.now().strftime("%d-%m-%Y %H:%M")
     return render(request, 'ventas/crear_venta.html',{'venta_form': venta_form,'conceptos':conceptos, 'fecha':fecha})
 @login_required
@@ -1642,3 +1679,31 @@ def EliminarVehiculo(request,id):
                               message="vehiculo eliminado correctamente: " + vehiculo.nombre )
         return redirect('listar_vehiculos')
     return render(request, 'vehiculos/eliminar_vehiculo.html', {'vehiculo':vehiculo})
+
+#APARTADO DE FUNCIONES PARA LA VENTA
+# @csrf_exempt
+# def post(self, request, *args, **kwargs):
+#     data = {}
+#     try:
+#         action = request.POST['action']
+#         if action == 'search_product_id':
+#             data = [{'id': '', 'text': '------------'}]
+#             for i in Producto.objects.filter( cat_id=request.POST['id'] ):
+#                 data.append( {'id': i.id, 'text': i.nombre, 'data': i.cat.toJSON()} )
+#         elif action == 'autocomplete':
+#             data = []
+#             for i in Producto.objects.filter( name__icontains=request.POST['term'] )[0:10]:
+#                 item = i.toJSON()
+#                 item['value'] = i.nombre
+#                 data.append( item )
+#         else:
+#             data['error'] = 'Ha ocurrido un error'
+#     except Exception as e:
+#         data['error'] = str( e )
+#     return JsonResponse( data, safe=False )
+#
+# def get_context_data(self, **kwargs):
+#     context = super().get_context_data( **kwargs )
+#     context['title'] = 'Select Aninados | Django'
+#     context['form'] = TestForm()
+#     return context
