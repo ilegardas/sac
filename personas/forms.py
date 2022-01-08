@@ -474,6 +474,7 @@ class VentaForm(forms.ModelForm):
             form.field.widget.attrs['class'] = 'form-control'
             form.field.widget.attrs['autocomplete'] = 'off'
         self.fields['cliente'].widget.attrs['autofocus']=True
+        self.fields['cliente'].widget.attrs['required'] = False
         self.fields['cliente'].widget.attrs['class'] = 'form-control select2'
         self.fields['monto'].widget.attrs['readonly'] = 'True'
         self.fields['monto'].widget.attrs['default'] = '0.0'
@@ -491,10 +492,11 @@ class VentaForm(forms.ModelForm):
             'cliente': forms.TextInput(
                 attrs={
                     'class': 'form-control select2',
-                    'style': 'width: 100%'
+                    'style': 'width: 100%',
+                    'required':'False',
+                    'blank':'True'
 
                 }
-
             )
         }
 class TiposVehiculoForm(forms.ModelForm):
@@ -590,6 +592,19 @@ class ProductosForm(forms.Form):
     }))
 #Para obtener selec de conceptos
 class ConceptosForm(forms.Form):
-    concepto = forms.ModelChoiceField( queryset=Concepto.objects.all(), widget=forms.Select( attrs={
+    concepto = forms.ModelChoiceField( queryset=Concepto.objects.all(), required=False ,blank=True, widget=forms.Select( attrs={
         'class': 'form-control select2'
     } ) )
+class ReporteFechasForm(forms.Form):
+    class Meta:
+
+        model = Requisicion
+        fields = ['fecha_creacion']
+        widgets = {
+            'fecha_creacion': forms.DateInput(
+                attrs={
+                    'class': 'form-control'
+
+                }
+           )
+        }

@@ -1,13 +1,15 @@
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import render, redirect, reverse
 from personas.forms import DepartamentoForm, RecursoForm, ProductoForm, ProveedorForm, InventarioForm, RequisicionForm, \
     OrdenForm, CompraForm, UsuarioForm, ReporteRequisicionesForm, ReporteOrdenesForm, ReporteComprasForm, \
-    UploadFileForm, ConceptoForm, VentaForm, VehiculoForm, TiposVehiculoForm, ProductosForm, ConceptosForm
+    UploadFileForm, ConceptoForm, VentaForm, VehiculoForm, TiposVehiculoForm, ProductosForm, ConceptosForm, \
+    ReporteFechasForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
 from personas.models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, OrdenCompra, Compra, \
-    Usuario, Bitacora, Concepto, Venta, Vehiculo, TiposVehiculo
+    Usuario, Bitacora, Concepto, Venta, Vehiculo, TiposVehiculo, ConceptoVenta
 from django.contrib.auth import logout
 from datetime import datetime
 from django.db.models import Q
@@ -18,6 +20,8 @@ import json
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+
+
 from django.core import serializers
 #from django.http import HttpResponseRedirect
 
@@ -1401,8 +1405,6 @@ def ReporteVehiculos(request):
 def ListarBitacora(request):
     if request.user.has_perm("personas.view_bitacora") == False:
         SinPermisos(request)
-    #bitacoras = Bitacora.objects.all().order_by('-fecha_creacion')
-    #return render(request, 'bitacora/listar_bitacora.html', {'bitacoras':bitacoras})
 
     if request.method == 'POST':
         fecha_creacion = request.POST.get( 'fecha_creacion', None )
@@ -1473,11 +1475,12 @@ def EliminarConcepto(request,id):
     return render(request,'conceptos/eliminar_concepto.html', {'concepto':concepto})
 
 ##CREACION DE FUNCIONES PARA LAS VENTAS
+@method_decorator(csrf_exempt)
 def CrearVenta(request):
     if request.user.has_perm("personas.add_venta") == False:
         SinPermisos(request)
     data = {}
-    if request.method == 'POST' and request.POST['action']=='autocomplete' :
+    if request.method == 'POST': #and request.POST['action']=='autocomplete' :
         data = {}
 
         try:
@@ -1485,43 +1488,54 @@ def CrearVenta(request):
 
             if action == 'autocomplete':
                 data = []
-                print("Busqueda: " + request.POST.get('term'))
                 for i in Concepto.objects.filter( Q(nombre__icontains=request.POST['term']) | Q(clave__icontains=request.POST['term']) )[0:10]:
                     item = i.toJSON()
                     item['text'] = i.nombre
-                    data.append( item )
+                    item['pvp'] = float(i.precio)
 
-                #for i in Concepto.objects.filter(nombre__icontains=request.POST['term'])[0:10]:
-                #    item =serializers.serialize( "json", i )
-                #    #item = []
-                #    item['text'] = i.nombre
-                #    data.append(item)
+                    data.append( item )
+            elif action == 'add':
+                with transaction.atomic():   # con transaction atomic si llega a surgir un error al agregar prods se hace rollback
+                    vents = json.loads(request.POST['vents'])
+                    print(vents)
+                    venta = Venta()
+                    venta.cliente = vents['cliente']
+                    venta.monto = vents['subtotal']
+                    venta.fecha_creacion = datetime.now()
+                    venta.save()
+                    for i in vents['products']:
+                        conceptoVta = ConceptoVenta()
+                        conceptoVta.venta_id = venta
+                        conceptoVta.concepto_id = Concepto.objects.get(id=i['id'])
+                        conceptoVta.cantidad = i['cant']
+                        conceptoVta.precio_unitario = i['precio']
+                        conceptoVta.subtotal = i['subtotal']
+                        conceptoVta.save()
+
             else:
+
                 data['error'] = 'Ha ocurrido un error'
+
         except Exception as e:
             data['error'] = str(e)
             print(data['error'])
+
+
         return JsonResponse( data, safe=False )
 
-    if request.method == 'POST':
-        venta_form = VentaForm(request.POST)
-        if venta_form.is_valid():
-            venta_form.save()
-            messages.add_message( request=request, level=messages.SUCCESS,
-                                  message="Venta agregada correctamente: " + venta_form.cleaned_data['id'] )
-            return redirect('listar_ventas')
     else:
         venta_form = VentaForm()
         conceptos = ConceptosForm()
-        #conceptos = Concepto.objects.all()
-        fecha = datetime.now().strftime("%d-%m-%Y %H:%M")
+        fecha = datetime.now().strftime("%d-%m-%Y")
     return render(request, 'ventas/crear_venta.html',{'venta_form': venta_form,'conceptos':conceptos, 'fecha':fecha})
 @login_required
 def ListarVentas(request):
     if request.user.has_perm("personas.view_venta") == False:
         SinPermisos(request)
-    ventas = Venta.objects.all()
-    return render(request, 'ventas/listar_ventas.html', {'ventas':ventas })
+    ventas = Venta.objects.filter(visible='si').order_by( '-pk' )
+    detalles = ConceptoVenta.objects.filter(venta_id__in=ventas)
+
+    return render(request, 'ventas/listar_ventas.html', {'ventas':ventas,'detalles':detalles })
 @login_required
 def EditarVenta(request, id):
     if request.user.has_perm("personas.change_venta") == False:
@@ -1552,9 +1566,69 @@ def EliminarVenta(request,id):
     if request.method == 'POST':
         venta.delete()
         messages.add_message( request=request, level=messages.SUCCESS,
-                              message="La venta se ha eliminado correctamente: " + venta.id )
-        return redirect('listar_ventass')
+                              message="Se ha eliminado correctamente la venta " )
+        return redirect('listar_ventas')
     return render(request,'ventas/eliminar_venta.html', {'venta':venta})
+#ESTA FUNCION CAMBIA EL ESTATUS DE LA FUNCION PARA NO PODER SER ELIMINADA EN EL LISTADO
+@login_required
+def TerminarVenta(request,id):
+    venta = Venta.objects.get(id=id)
+    venta.visible = 'no'
+    venta.save()
+    return redirect( 'listar_ventas' )
+#CODIGO PARA MANDAR IMPRIMIR LA REQUISICION
+def ImprimirVenta(request,id):
+    if request.user.has_perm("personas.view_venta") == False:
+        SinPermisos(request)
+    venta = None
+    fecha = datetime.now()
+    venta = Venta.objects.get(id=id)
+    detalles = ConceptoVenta.objects.filter(venta_id = venta)
+    return render(request, 'ventas/imprimir_venta.html', {'venta': venta,'detalles':detalles,'fecha':fecha} )
+#REPORTE DE VENTAS
+@login_required
+def ReporteVentas(request):
+    if request.user.has_perm( "personas.view_venta" ) == False:
+        SinPermisos( request )
+
+    ReporteVenta_form = None
+    error = None
+    ventas = Venta()
+    conceptos = Concepto.objects.all()       # campos para busqueda por concepto de vta
+    if request.method == 'GET':
+
+        ventas = Venta.objects.all()
+        return render( request,
+                       'reportes_ventas/listar_ventas2.html',
+                       { 'conceptos': conceptos}
+                     )
+    else:
+
+        Query = Venta.objects.filter( cliente__contains=request.POST.get( 'cliente' ))
+        fecha_creacion = request.POST.get( 'fecha_creacion' )
+        if len(fecha_creacion) > 2:
+
+            fechas = fecha_creacion.split( ' ' )
+            fecha_i = datetime.strptime( fechas[0], '%d-%m-%Y' )
+            fecha_f = datetime.strptime( fechas[2], '%d-%m-%Y' )
+            Query = Query.filter( fecha_creacion__range=[fecha_i, fecha_f] )
+
+        if request.POST.get( 'concepto_id' ) != 'todos':
+            Query = Query.filter( concepto_id=request.POST.get( 'concepto_id' ) )
+
+        Query = Query.order_by('-pk')
+        ventas = Query
+        detalles = ConceptoVenta.objects.all()
+        return render(
+            request,
+            'reportes_ventas/listar_ventas2.html',
+
+                       {''
+                        'ventas': ventas,
+                        'ReporteVenta_form': ReporteVenta_form,
+                        'conceptos': conceptos,
+                        'detalles': detalles
+                        } )
 ##CREACION DE FUNCIONES PARA LOS TIPOS DE VEHICULOS
 def CrearTiposVehiculo(request):
     if request.user.has_perm("personas.add_tiposvehiculo") == False:
@@ -1680,30 +1754,3 @@ def EliminarVehiculo(request,id):
         return redirect('listar_vehiculos')
     return render(request, 'vehiculos/eliminar_vehiculo.html', {'vehiculo':vehiculo})
 
-#APARTADO DE FUNCIONES PARA LA VENTA
-# @csrf_exempt
-# def post(self, request, *args, **kwargs):
-#     data = {}
-#     try:
-#         action = request.POST['action']
-#         if action == 'search_product_id':
-#             data = [{'id': '', 'text': '------------'}]
-#             for i in Producto.objects.filter( cat_id=request.POST['id'] ):
-#                 data.append( {'id': i.id, 'text': i.nombre, 'data': i.cat.toJSON()} )
-#         elif action == 'autocomplete':
-#             data = []
-#             for i in Producto.objects.filter( name__icontains=request.POST['term'] )[0:10]:
-#                 item = i.toJSON()
-#                 item['value'] = i.nombre
-#                 data.append( item )
-#         else:
-#             data['error'] = 'Ha ocurrido un error'
-#     except Exception as e:
-#         data['error'] = str( e )
-#     return JsonResponse( data, safe=False )
-#
-# def get_context_data(self, **kwargs):
-#     context = super().get_context_data( **kwargs )
-#     context['title'] = 'Select Aninados | Django'
-#     context['form'] = TestForm()
-#     return context

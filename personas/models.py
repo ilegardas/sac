@@ -260,6 +260,8 @@ class Venta(models.Model):
     cliente = models.CharField('Nombre del Cliente', max_length=100, null=True, blank=True)
     monto = models.CharField('Monto', max_length=45, null=True, blank=False)
     fecha_creacion = models.DateField( 'Fecha de Creacion', auto_created=True )
+    visible = models.CharField('visible', max_length=100, null=False, blank=False, default='si')
+
 
     class Meta:
         verbose_name = 'Venta'

@@ -21,7 +21,7 @@ from personas.views import Home, SinPermisos, ListarBitacora, CrearVenta, Listar
     EditarVenta, EliminarVenta, CrearConcepto, ListarConceptos, EditarConcepto, \
     EliminarConcepto, CrearVehiculo, ListarVehiculo, EditarVehiculo, EliminarVehiculo, \
     CrearTiposVehiculo, ListarTiposVehiculos, EditarTiposVehiculo, EliminarTiposVehiculo, \
-    ReporteVehiculos  # , logout_user, login_user
+    ReporteVehiculos, TerminarVenta, ImprimirVenta, ReporteVentas  # , logout_user, login_user
 from personas.views import CrearDepartamento, ListarDepartamentos, EditarDepartamento, EliminarDepartamento, CrearRecurso, ListarRecursos, EditarRecurso, EliminarRecurso, CrearProducto, EditarProducto, ListarProductos, EliminarProducto
 from personas.views import CrearProveedor, ListarProveedores,EditarProveedor,EliminarProveedor, CrearInventario, ListarInventarios, EditarInventario, EliminarInventario, CrearRequisicion, ListarRequisiciones, EditarRequisicion, EliminarRequisicion
 from personas.views import CrearOrden, ListarOrdenes, EditarOrden, EliminarOrden, CancelarRequisicion, CancelarOrden, ImprimirOrden, ContadorImpresiones, CrearCompra, EditarCompra, CancelarCompra, ListarCompras, EliminarCompra, TerminarCompra, CrearUsuario, EditarUsuario, ListarUsuarios, EliminarUsuario, ReporteRequerimientos, ReporteOrdenes, ReporteCompras, cambiar_logo, ImprimirRequisicion, TerminarRequisicion
@@ -114,6 +114,7 @@ urlpatterns = [
     path('reportes/ordenes_compra/',permission_required('personas.view_ordencompra', login_url='')(ReporteOrdenes), name='reporte_ordenes'),
     path('reportes/compras/',permission_required('personas.view_compra', login_url='')(ReporteCompras), name='reporte_compras'),
     path('reportes/vehiculos/',permission_required('personas.view_ordencompra', login_url='')(ReporteVehiculos), name='reporte_vehiculos'),
+    path('reportes/ventas/',permission_required('personas.view_venta', login_url='')(ReporteVentas), name='reporte_ventas'),
 
     path('sinpermisos/', SinPermisos, name='sin_permisos'),
     path('bitacora/', ListarBitacora, name='bitacora'),
@@ -127,6 +128,8 @@ urlpatterns = [
     path('ventas/listar_ventas/',permission_required('personas.view_venta', login_url='')(ListarVentas), name='listar_ventas'),
     path('ventas/editar_venta/<int:id>',permission_required('personas.change_venta', login_url='')(EditarVenta), name='editar_venta'),
     path('ventas/eliminar_venta/<int:id>',permission_required('personas.delete_venta', login_url='')(EliminarVenta), name='eliminar_venta'),
+    path('ventas/deslistar/<int:id>',permission_required('personas.view_venta', login_url='')(TerminarVenta), name='delistar_venta'),
+    path('ventas/imprimir_venta/<int:id>',permission_required('personas.view_venta', login_url='')(ImprimirVenta), name='imprimir-venta'),
 #SEGMENTO PARA VEHICULOS
     path('vehiculos/crear_vehiculo/',permission_required('personas.add_vehiculo', login_url='')(CrearVehiculo), name='crear_vehiculo'),
     path('vehiculos/listar_vehiculos/',permission_required('personas.view_vehiculo', login_url='')(ListarVehiculo), name='listar_vehiculos'),

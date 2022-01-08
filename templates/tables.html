@@ -364,12 +364,15 @@
                 <div id="collapseReportes" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         {% if perms.personas.view_ordencompra %}
-                        <a class="collapse-item" href="{% url 'reporte_requerimientos' %}">Reporte de Requisiciones</a>
-                        <a class="collapse-item" href="{% url 'reporte_ordenes' %}">Reporte de Ordenes</a>
-                        <a class="collapse-item" href="{% url 'reporte_vehiculos' %}">Reporte Vehiculos</a>
+                            <a class="collapse-item" href="{% url 'reporte_requerimientos' %}">Reporte de Requisiciones</a>
+                            <a class="collapse-item" href="{% url 'reporte_ordenes' %}">Reporte de Ordenes</a>
+                            <a class="collapse-item" href="{% url 'reporte_vehiculos' %}">Reporte Vehiculos</a>
                         {% endif %}
                         {% if perms.personas.view_compra %}
-                        <a class="collapse-item" href="{% url 'reporte_compras' %}">Reporte de Compras</a>
+                            <a class="collapse-item" href="{% url 'reporte_compras' %}">Reporte de Compras</a>
+                        {% endif %}
+                        {% if perms.personas.view_venta %}
+                            <a class="collapse-item" href="{% url 'reporte_ventas' %}">Reporte de Ventas</a>
                         {% endif %}
                         {% if perms.personas.view_bitacora %}
                         <a class="collapse-item" href="{% url 'bitacora' %}">Bitacora</a>
@@ -385,7 +388,7 @@
 
             <!-- Heading -->
 
-            {% if perms.personas.view_venta %}
+            {% if perms.personas.add_venta %}
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
                     aria-expanded="true" aria-controls="collapsePages2">
