@@ -49,7 +49,7 @@
 
                 <label >Proveedor </label>
                 <label >Si no se encuentra puede agregarlo <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
-                <select name="proveedor_id" class="form-select ">
+                <select name="proveedor_id" class="form-select " >
                                     <option value={{ requisicion.proveedor_id.id }}>{{ requisicion.proveedor_id.nombre }}</option>
                                     {% for proveedor in proveedores %}
                                         <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>

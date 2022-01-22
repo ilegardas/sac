@@ -12,27 +12,20 @@
 {% endblock reportes %}
 {%block header %}
 
-     <link rel="stylesheet" type="text/css" media="all" href="{%  static 'lib/daterangepicker-master/daterangepicker.css' %}" />
-
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
-
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
-
-      <script type="text/javascript" src="{%  static 'lib/daterangepicker-master/daterangepicker.js' %} "></script>
-
+    <link rel="stylesheet" type="text/css" media="all" href="{%  static 'lib/daterangepicker-master/daterangepicker.css' %}" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+    <script type="text/javascript" src="{%  static 'lib/daterangepicker-master/daterangepicker.js' %} "></script>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <link rel="stylesheet" href="{%  static 'reportes/js/reportes.js' %}" />
     <!--  DATA TABLE OPTIONS-->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.js"></script>
 
-
-
     <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
-
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
 
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
@@ -42,27 +35,27 @@
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.print.min.js"></script>
     <script>
-    $(function() {
-        $(document).ready(function() {
-            $('#dataTable').DataTable({
-                responsive: true,
-                destroy: true,
-                ordering: false,
-                searching:true,
-                info: false,
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Excel <i class="fas fa-file-excel"></i>',
-                        titleAttr: 'Excel',
-                        className: 'btn btn-sucess bnt-flat btn-xs'
-                    },
-                    'copy', 'print'
-                ]
-            });
-        } );
-    });
+        $(function() {
+            $(document).ready(function() {
+                $('#dataTable').DataTable({
+                    responsive: true,
+                    destroy: true,
+                    ordering: false,
+                    searching:true,
+                    info: false,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Excel <i class="fas fa-file-excel"></i>',
+                            titleAttr: 'Excel',
+                            className: 'btn btn-sucess bnt-flat btn-xs'
+                        },
+                        'copy', 'print'
+                    ]
+                });
+            } );
+        });
     </script>
     <script>
         $(function() {
@@ -86,7 +79,7 @@
                 });
             } );
         });
-        </script>
+    </script>
 
 {%endblock header %}
 {% block pagename %}
@@ -101,7 +94,7 @@
                   <div>
                     <ul class="messages">
                         {% for message in messages %}
-                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                            <li> {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
                         {% endfor %}
                     </ul>
                   </div>
@@ -167,7 +160,7 @@
                                         Autorizar
                                     </a>
                                     {% endif %}
-                                    <a class="" href="javascript:ventanaSecundaria2('{% url 'imprimir-requisicion' requisicion.id %}')"   >
+                                    <a class="" href="{% url 'imprimir-requisicion' requisicion.id %}" target="_blank" >
                                                 <img title="Imprimir Requisicion " width="20" height="20" src="{% static 'img/printer.png' %}" class=" alt="Generar Requisicion para Imprimir">
                                     </a>
                                     {% if perms.personas.delete_requisicion %}

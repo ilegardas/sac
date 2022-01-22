@@ -239,8 +239,11 @@ class InventarioForm(forms.ModelForm):
             )
         }
 
-
 class RequisicionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super( RequisicionForm, self ).__init__( *args, **kwargs )
+        self.fields['proveedor_id'].empty_label = None
+
     class Meta:
         model = Requisicion
         fields = ['departamento_id','persona_id', 'recursos_id','producto_id','proveedor_id','descripcion','vehiculo_id']
@@ -279,7 +282,8 @@ class RequisicionForm(forms.ModelForm):
                 attrs={
                     'class': 'form-control form-control-user',
                     'readonly': False,
-                    'disabled': False
+                    'disabled': False,
+                    'blank': False
 
                 }
 
@@ -308,16 +312,18 @@ class RequisicionForm(forms.ModelForm):
 
         }
 class OrdenForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super( OrdenForm, self ).__init__( *args, **kwargs )
+        self.fields['proveedor_id'].empty_label = None
+
     class Meta:
         model = OrdenCompra
+
         fields = ['recursos_id','proveedor_id', 'descripcion','cantidad_prod','precio_unitario','precio_total']
         widgets = {
             'recursos_id': forms.Select(
                 attrs={
                     'class': 'form-control form-control-user',
-                    'readonly': False,
-                    'disabled': False
-
 
                 }
 
@@ -325,20 +331,12 @@ class OrdenForm(forms.ModelForm):
             'proveedor_id': forms.Select(
                 attrs={
                     'class': 'form-control form-control-user',
-                    'readonly': False,
-                    'disabled': False
-
-
-
-                }
-
+                },
             ),
             'descripcion': forms.Textarea(
                 attrs={
                     'class': 'form-control form-control-user'
-
                 }
-
             ),
             'cantidad_prod': forms.TextInput(
                 attrs={

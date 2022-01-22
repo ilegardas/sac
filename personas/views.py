@@ -22,10 +22,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 
-from django.core import serializers
-#from django.http import HttpResponseRedirect
-
-
 # Create your views here.
 @method_decorator(csrf_exempt)
 @method_decorator(login_required)
@@ -96,8 +92,6 @@ def CrearDepartamento(request):
         departamento = Departamento(nombre=nom,descripcion=desc)
         departamento.save()
         return redirect( 'listar_departamentos')
-
-
     else:
         departamento_form = DepartamentoForm()
     return render(request, 'departamentos/crear_departamento.html',{'departamento_form': departamento_form})
@@ -154,7 +148,6 @@ def CrearUsuario(request):
         nombres = request.POST.get( 'nombres' )
         apellidos = request.POST.get( 'apellidos' )
         departamento = Departamento.objects.get(id=request.POST.get( 'departamento_id' ) )
-        departamento_id = departamento
         telefono = request.POST.get( 'telefono' )
         if request.POST.get( 'is_active' ) == 'on':
             is_active = True
@@ -201,11 +194,9 @@ def CrearUsuario(request):
 def ListarUsuarios(request):
     if request.user.has_perm("personas.view_usuario") == False:
         SinPermisos(request)
-
-
-
     usuarios = Usuario.objects.all()
     return render(request, 'usuarios/listar_usuarios.html', {'usuarios':usuarios })
+
 @login_required
 def EditarUsuario(request, id):
     if request.user.has_perm("personas.change_usuario") == False:
@@ -304,6 +295,8 @@ def EditarRecurso(request, id):
             recurso_form = RecursoForm( instance=recurso )
         else:
             recurso_form = RecursoForm( request.POST, instance=recurso )
+
+            print(recurso_form.vehiculo_id)
             if recurso_form.is_valid():
                 recurso_form.save()
                 messages.add_message( request=request, level=messages.SUCCESS,
@@ -533,8 +526,6 @@ def CrearRequisicion(request):
         #Obtengo la lista de productos
         producto = Producto.objects.filter(id__in=request.POST.getlist('productos'))
         if (request.POST.get('vehiculos') != ""):
-            print("El valor:")
-            print (request.POST.get('vehiculos'))
             vehiculo = Vehiculo.objects.get(id=request.POST.get('vehiculos'))
         else:
             vehiculo = None
@@ -624,9 +615,8 @@ def EditarRequisicion(request, id):
             requisicion.proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
             #requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
             if (request.POST.get( 'vehiculo_id' ) is not None):
-                print( "El valor:" )
-                print( request.POST.get( 'vehiculos' ) )
-                requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculos' ) )
+                print(request.POST.get( 'vehiculo_id' ))
+                requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
             else:
                 vehiculo = None
             requisicion.save()
@@ -818,23 +808,32 @@ def ListarOrdenes(request):
 def EditarOrden(request, id):
     if request.user.has_perm("personas.change_ordencompra") == False:
         SinPermisos(request)
-    orden_form = None
+    #orden_form = None
     error = None
     try:
-        orden = OrdenCompra.objects.get( id=id)
-        requisicion = Requisicion.objects.get(id=orden.requerimiento_id.id)
+        ordenc = OrdenCompra.objects.get(id=id)
 
         if request.method == 'GET':
-            orden_form = OrdenForm( instance=orden )
+            ordenc_form = OrdenForm(instance=ordenc)
+            recursos = Recurso.objects.all()
+            proveedores = Proveedor.objects.all()
         else:
-            orden_form = OrdenForm( request.POST, instance=orden )
+            orden_form = OrdenForm( request.POST, instance=ordenc )
+            orden = OrdenCompra.objects.get(id=ordenc.id)
+            orden.recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
+            orden.proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
+            orden.cantidad_prod = request.POST.get('cantidad_prod')
+            orden.precio_unitario = request.POST.get('precio_unitario')
+            orden.precio_total = request.POST.get('precio_total')
+            orden.descripcion = request.POST.get('descripcion')
+
             if orden_form.is_valid():
                 orden_form.save()
                 messages.add_message( request=request, level=messages.SUCCESS,
                                       message="Orden editada correctamente: " + orden_form.cleaned_data['descripcion'] )
                 #SE AGREGA EL MOVIMIENTO A LA BITACORA
                 pedido = ""
-                for prods in requisicion.producto_id.all():
+                for prods in orden.requerimiento_id.producto_id.all():
                     pedido = pedido + str( prods.nombre ) + ","
                 bitacora = Bitacora( fecha_creacion=datetime.now(),
                                      folio=str( orden_form.cleaned_data['proveedor_id'] ) + "(" + str(
@@ -848,7 +847,7 @@ def EditarOrden(request, id):
     except ObjectDoesNotExist as e:
         error=e
 
-    return render(request, 'ordenes/editar_orden.html', {'orden_form': orden_form,'error':error,'requisicion':requisicion})
+    return render(request, 'ordenes/editar_orden.html', {'ordenc_form': ordenc_form,'error':error,'orden':ordenc,'recursos':recursos,'proveedores':proveedores})
 @login_required
 def EliminarOrden(request,id):
     if request.user.has_perm("personas.delete_ordencompra") == False:
@@ -905,6 +904,7 @@ def ImprimirOrden(request,id):
     requisicion = None
     fecha = datetime.now()
     orden = OrdenCompra.objects.get(id=id)
+    #fecha = orden.fecha_creacion
     contador = ContadorImpresiones(request,id )
     requisicion = Requisicion.objects.get(id=orden.requerimiento_id.id)
     return render(request, 'ordenes/imprimir_ordenes.html', {'requisicion': requisicion, 'orden': orden,'fecha':fecha} )
