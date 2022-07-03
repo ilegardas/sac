@@ -11,7 +11,7 @@ from django.contrib.auth.hashers import make_password
 from personas.models import Departamento, Recurso, Producto, Proveedor, Inventario, Requisicion, OrdenCompra, Compra, \
     Usuario, Bitacora, Concepto, Venta, Vehiculo, TiposVehiculo, ConceptoVenta
 from django.contrib.auth import logout
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
@@ -569,7 +569,7 @@ def CrearRequisicion(request):
         for aprobador in aprobadores:
             aprobadores_mail.append( aprobador.email )
         mensaje = "Se ha creado un requerimiendo solicitando: " + str(pedido) + " " + str(requisicion.descripcion) + ", creado por:" + str(requisicion.persona_id) + " del departamento de: " + str(requisicion.departamento_id)
-        Notificar(request,'creacion de requerimiento',mensaje,aprobadores_mail)
+        #Notificar(request,'creacion de requerimiento',mensaje,aprobadores_mail)
         #SE GUARDA A LA BITACORA LA REQUISICION CREADA
         bitacora = Bitacora( fecha_creacion=datetime.now(),
                              folio= "(" + str(
@@ -737,59 +737,64 @@ def CrearOrden(request,id=None):
         requisicion = Requisicion.objects.get(id=id)
     else:
         id=None
+    if requisicion.estatus != "procesado":
 
-    if request.method == 'POST':
-        requerimiento_id = requisicion
-        aprobador_id = usuario
-        recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id') )
-        proveedor_id = Proveedor.objects.get(id=request.POST.get('proveedor_id'))
-        descripcion = requisicion.descripcion
-        estatus = 'autorizado'
-        cantidad = request.POST.get('cantidad_prod')
-        precio_unitario = request.POST.get('precio_unitario')
-        precio_total = request.POST.get('precio_total')
+        if request.method == 'POST':
+            requerimiento_id = requisicion
+            aprobador_id = usuario
+            recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id') )
+            proveedor_id = Proveedor.objects.get(id=request.POST.get('proveedor_id'))
+            descripcion = requisicion.descripcion
+            estatus = 'autorizado'
+            cantidad = request.POST.get('cantidad_prod')
+            precio_unitario = request.POST.get('precio_unitario')
+            precio_total = request.POST.get('precio_total')
 
-        orden = OrdenCompra(
-            requerimiento_id=requerimiento_id,
-            aprobador_id=aprobador_id,
-            recursos_id=recursos_id,
-            proveedor_id=proveedor_id,
-            cantidad_prod=cantidad,
-            precio_unitario=precio_unitario,
-            precio_total=precio_total,
-            descripcion=descripcion,
-            estatus=estatus,
-            fecha_creacion=datetime.now(),
-            fecha_estatus=datetime.now()
+            orden = OrdenCompra(
+                requerimiento_id=requerimiento_id,
+                aprobador_id=aprobador_id,
+                recursos_id=recursos_id,
+                proveedor_id=proveedor_id,
+                cantidad_prod=cantidad,
+                precio_unitario=precio_unitario,
+                precio_total=precio_total,
+                descripcion=descripcion,
+                estatus=estatus,
+                fecha_creacion=datetime.now(),
+                fecha_estatus=datetime.now()
 
-        )
+            )
 
-        orden.save()
-        messages.add_message( request=request, level=messages.SUCCESS,
-                              message="Orden creada correctamente: " + orden.descripcion )
-        cambiado = OrdenDeRequisicion(request, requerimiento_id.id)
-        #SE AGREGA A LA BITACORA
-        pedido = ""
-        for prods in requisicion.producto_id.all():
-            pedido = pedido + str(prods.nombre) +","
+            orden.save()
+            messages.add_message( request=request, level=messages.SUCCESS,
+                                  message="Orden creada correctamente: " + orden.descripcion )
+            cambiado = OrdenDeRequisicion(request, requerimiento_id.id)
+            #SE AGREGA A LA BITACORA
+            pedido = ""
+            for prods in requisicion.producto_id.all():
+                pedido = pedido + str(prods.nombre) +","
 
-        bitacora = Bitacora( fecha_creacion=datetime.now(),
-                             folio=str( orden.proveedor_id ) + "(" + str(
-                                 pedido ) +" " + str(
-                                 orden.cantidad_prod ) + ")",
-                             estatus="Orden Creada",
-                             usuario=request.user.nombres,
-                             tipo_documento="Orden de Compra" )
-        bitacora.save()
-        #SE NOTIFICA A LOS REQUISITORES POR CORREO
-        destinatario = (requisicion.persona_id.email,)
-        mensaje = "Se ha aprobado su solicitud de compra con descripción: " + str( pedido ) + ", " + str( requisicion.descripcion )
-        Notificar( request, 'Aprobacion de requerimiento', mensaje, destinatario )
-        return redirect('listar_ordenes')
+            bitacora = Bitacora( fecha_creacion=datetime.now(),
+                                 folio=str( orden.proveedor_id ) + "(" + str(
+                                     pedido ) +" " + str(
+                                     orden.cantidad_prod ) + ")",
+                                 estatus="Orden Creada",
+                                 usuario=request.user.nombres,
+                                 tipo_documento="Orden de Compra" )
+            bitacora.save()
+            #SE NOTIFICA A LOS REQUISITORES POR CORREO
+            destinatario = (requisicion.persona_id.email,)
+            mensaje = "Se ha aprobado su solicitud de compra con descripción: " + str( pedido ) + ", " + str( requisicion.descripcion )
+            #Notificar( request, 'Aprobacion de requerimiento', mensaje, destinatario )
+            return redirect('listar_ordenes')
+        else:
+            orden_form = OrdenForm()
+            recursos = Recurso.objects.filter(visible='si').order_by('nombre')
+            proveedores = Proveedor.objects.all()
     else:
-        orden_form = OrdenForm()
-        recursos = Recurso.objects.all()
-        proveedores = Proveedor.objects.all()
+        messages.add_message( request=request, level=messages.SUCCESS,
+                              message="Esta requisición ya se había autorizado anteriormente: " + str(requisicion.id) + ": " + requisicion.descripcion )
+        return redirect( 'listar_ordenes' )
 
 
     return render(request, 'ordenes/crear_orden.html',{'orden_form': orden_form,'usuario':usuario,'requisicion':requisicion,'recursos':recursos,'proveedores':proveedores })
@@ -801,7 +806,13 @@ def ListarOrdenes(request):
     requisiciones_l = None
     ordenes_l = None
     requisiciones_l = Requisicion.objects.filter( estatus='pendiente' ).order_by('-pk')
-    ordenes_l = OrdenCompra.objects.filter( aprobador_id=request.user, estatus='autorizado' ).order_by('-pk')
+    #AQUI SOLICITO VALO EL 11 04 2022 QUE TODOS PUEDAN VER LAS AUTORIZADOS DE TODOS
+    #ordenes_l = OrdenCompra.objects.filter( aprobador_id=request.user, estatus='autorizado' ).order_by('-pk')
+    startdate = datetime.today()
+    enddate = startdate + timedelta(days=7)
+    #Sample.objects.filter(date__range=[startdate, enddate])
+    #ordenes_l = OrdenCompra.objects.filter( estatus='autorizado').order_by('-pk')
+    ordenes_l = OrdenCompra.objects.filter( estatus='autorizado',fecha_creacion__range=[startdate, enddate] ).order_by('-pk')
 
     return render(request, 'ordenes/listar_ordenes.html', {'requisiciones':requisiciones_l,'ordenes': ordenes_l})
 @login_required

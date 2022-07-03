@@ -29,7 +29,7 @@
         <div class="container-fluid">
             <br>
             <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Requisiciones</h1>
-            <p class="mb-4">Esta seccion es para agregar los requerimientos de Compra.</p>
+            <p class="mb-4">Esta sección es para agregar los requerimientos de Compra.</p>
 
             <form method="POST">
         {% csrf_token %}
@@ -43,7 +43,7 @@
             {{ catalogos_form.productos }}
 
             <div id="admDivCheck" style="display:none;">
-                <label >Ha seleccionado combustible por favor indique a que vehiculo se le pondrá.
+                <label >Por favor indique a que vehículo se le asignará la requisición.
                     <a href="{% url 'crear_vehiculo' %}">Agregar Vehiculo</a></label>
                 {{ catalogos_form.vehiculos }}
             </div>

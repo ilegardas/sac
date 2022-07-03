@@ -156,6 +156,7 @@
                             <th>Aprobador</th>
                             <th>Requisitor</th>
                             <th>Producto</th>
+                            <th>Vehiculo</th>
                             <th>Cantidad</th>
                             <th>Proveedor</th>
                             <th>Total</th>
@@ -177,8 +178,9 @@
                                 <td>{{ compra.ordenCompra_id.aprobador_id }}</td>
                                 <td>{{ compra.ordenCompra_id.requerimiento_id.persona_id }}</td>
                                 <td>
-                                {% for producto in compra.ordenCompra_id.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if compra.ordenCompra_id.requerimiento_id.vehiculo_id is not None %} Para: {{ compra.ordenCompra_id.requerimiento_id.vehiculo_id }} {% endif %}
+                                {% for producto in compra.ordenCompra_id.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %}
                                 </td>
+                                <td>{% if compra.ordenCompra_id.requerimiento_id.vehiculo_id is not None %} {{ compra.ordenCompra_id.requerimiento_id.vehiculo_id }} {% endif %} </td>
                                 <td>{{ compra.ordenCompra_id.cantidad_prod }}</td>
                                 <td>{{ compra.ordenCompra_id.proveedor_id }}</td>
                                 <td>{{ compra.Total }}</td>

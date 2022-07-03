@@ -134,7 +134,7 @@ AUTH_USER_MODEL = 'personas.Usuario'
 
 LANGUAGE_CODE = 'es-us'
 #LOGIN_REDIRECT_URL = reverse_lazy('')
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/chihuahua'
 
 USE_I18N = True
 

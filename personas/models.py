@@ -85,6 +85,7 @@ class Recurso(models.Model):
     nombre = models.CharField('Nombre', max_length=25, null=False, blank=False)
     descripcion = models.TextField('Descripcion', max_length=250)
     fecha_creacion = models.DateField('Fecha de Creacion', auto_now=True, auto_created=True)
+    visible = models.CharField( 'visible', max_length=100, null=False, blank=False, default='si' )
 
     class Meta:
         verbose_name = 'Recurso'
@@ -295,10 +296,14 @@ class ConceptoVenta( models.Model ):
 class Vehiculo(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField('Nombre', max_length=70, null=False)
-    marca = models.CharField( 'Marca', max_length=100, null=True )
-    modelo = models.CharField( 'Modelo', max_length=100, null=True )
+    num_economico = models.CharField( 'Numero Económico', max_length=70, null=False, default='')
+    marca = models.CharField('Marca', max_length=100, null=True )
+    submarca = models.CharField('Submarca', max_length=100, null=True, default='')
+    modelo = models.CharField('Modelo', max_length=100, null=True )
     tipo = models.ForeignKey('TiposVehiculo', on_delete=models.PROTECT, null=True, blank=True, default=None )
-    placas = models.CharField('placas', max_length=50,default='', null=True)
+    placas = models.CharField('Placas', max_length=50,default='', null=True)
+    color = models.CharField('Color', max_length=50, default='', null=True)
+    visible = models.CharField('visible', max_length=3, default='si', null=False )
     departamento_id = models.ForeignKey('Departamento', on_delete=models.PROTECT, null=True, blank=True, default=None )
     fecha_mantenimiento = models.DateField('Fecha de Ultimo Servicio', auto_now=False, auto_created=False )
     anotaciones = models.CharField('Anotaciones',  max_length=600, null=True, blank=True, default='' )

@@ -172,6 +172,7 @@
                             <th>Departamento</th>
                             <th>Requisitor</th>
                             <th>Producto</th>
+                            <th>Vehiculo</th>
                             <th>Recurso</th>
                             <th>Descripcion</th>
                             <th>Fecha de Creacion</th>
@@ -187,8 +188,9 @@
                                 <td>{{ requisicion.departamento_id }}</td>
                                 <td>{{ requisicion.persona_id }}</td>
                                 <td>
-                                {% for producto in requisicion.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if requisicion.vehiculo_id is not None %} Para: {{ requisicion.vehiculo_id }} {% endif %}
+                                {% for producto in requisicion.producto_id.all %} {{producto.nombre}}, {% endfor %}
                                 </td>
+                                <td>{% if requisicion.vehiculo_id is not None %} {{ requisicion.vehiculo_id }} {% endif %}</td>
                                 <td>{{ requisicion.recursos_id }}</td>
                                 <td>{{ requisicion.descripcion }}</td>
                                 <td>{{ requisicion.fecha_creacion }}</td>

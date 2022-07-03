@@ -243,6 +243,7 @@ class RequisicionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super( RequisicionForm, self ).__init__( *args, **kwargs )
         self.fields['proveedor_id'].empty_label = None
+        self.fields['recursos_id'].queryset = Recurso.objects.filter( visible='si' )
 
     class Meta:
         model = Requisicion
@@ -522,7 +523,9 @@ class VehiculoForm(forms.ModelForm):
         model = Vehiculo
         CHOICES = (('Carro', 'Carro'), ('Camioneta', 'Camioneta'),('Troca', 'Troca'),('Motocicleta', 'Motocicleta'),('Maquinaria', 'Maquinaria'),)
         tipo = forms.ChoiceField( choices=CHOICES )
-        fields = ['nombre','marca','modelo', 'tipo','placas','departamento_id','fecha_mantenimiento','anotaciones']
+        #SINO = (('si', 'si'), ('no', 'no'),)
+        #visible = forms.ChoiceField( choices=SINO )
+        fields = ['nombre','num_economico','marca','submarca','modelo', 'tipo','placas','color','visible','departamento_id','fecha_mantenimiento','anotaciones']
         widgets = {
             'nombre': forms.TextInput(
                 attrs={
@@ -531,7 +534,21 @@ class VehiculoForm(forms.ModelForm):
                 }
 
             ),
+            'num_economico': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
             'marca': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
+            'submarca': forms.TextInput(
                 attrs={
                     'class': 'form-control form-control-user'
 
@@ -552,6 +569,13 @@ class VehiculoForm(forms.ModelForm):
                 }
 
             ),
+            'color': forms.TextInput(
+                attrs={
+                    'class': 'form-control form-control-user'
+
+                }
+
+            ),
             'tipo': forms.Select(
                 attrs={
                     'class': 'form-control form-control-user'
@@ -564,6 +588,13 @@ class VehiculoForm(forms.ModelForm):
                     'class': 'form-control form-control-user'
 
                 }
+
+            ),
+            'visible': forms.Select(choices=(('no', 'No'), ('si', 'Si')),
+                                    attrs={
+                                        'class': 'form-control form-control-user'
+
+                                    }
 
             ),
             'fecha_mantenimiento': forms.SelectDateWidget(
@@ -581,7 +612,7 @@ class ProductosForm(forms.Form):
     productos = forms.ModelChoiceField(queryset=Producto.objects.all() , widget=forms.Select(attrs={
         'class': 'form-control'
     }))
-    vehiculos = forms.ModelChoiceField(queryset=Vehiculo.objects.all(), required=False ,blank=True, widget=forms.Select(attrs={
+    vehiculos = forms.ModelChoiceField(queryset=Vehiculo.objects.filter(visible='si'), required=False ,blank=True, widget=forms.Select(attrs={
         'class': 'form-control',
         'blank':'True',
         'null':'True',

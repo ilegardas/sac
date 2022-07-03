@@ -170,13 +170,14 @@
                         <tr>
                             <th>#</th>
                             <th>Departamento</th>
-                            <th>Aprobador</th>
+                            <th>Proveedor</th>
                             <th>Requisitor</th>
                             <th>Producto</th>
+                            <th>Vehiculos</th>
                             <th>Cantidad</th>
                             <th>Precio Unitario</th>
                             <th>Precio Total</th>
-                            <th>Proveedor</th>
+                            <th>Aprobador</th>
                             <th>Recursos</th>
                             <th>Descripcion</th>
                             <th>Creado</th>
@@ -192,15 +193,16 @@
                             <tr>
                                 <td>{{ orden.id }}</td>
                                 <td>{{ orden.requerimiento_id.departamento_id }}</td>
-                                <td>{{ orden.aprobador_id }}</td>
+                                <td>{{ orden.proveedor_id }}</td>
                                 <td>{{ orden.requerimiento_id.persona_id }}</td>
                                 <td>
-                                    {% for producto in orden.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %} {% if orden.requerimiento_id.vehiculo_id is not None %} Para: {{ orden.requerimiento_id.vehiculo_id }} {% endif %}
+                                    {% for producto in orden.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %}
                                 </td>
+                                <td>{% if orden.requerimiento_id.vehiculo_id is not None %} {{ orden.requerimiento_id.vehiculo_id }} {% endif %}</td>
                                 <td>{{ orden.cantidad_prod }}</td>
                                 <td>{{ orden.precio_unitario }}</td>
                                 <td>{{ orden.precio_total }}</td>
-                                <td>{{ orden.proveedor_id }}</td>
+                                <td>{{ orden.aprobador_id }}</td>
                                 <td>{{ orden.recursos_id }}</td>
                                 <td>{{ orden.descripcion }}</td>
                                 <td>{{ orden.fecha_creacion }}</td>
