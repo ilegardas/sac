@@ -241,9 +241,15 @@ class InventarioForm(forms.ModelForm):
 
 class RequisicionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None )
         super( RequisicionForm, self ).__init__( *args, **kwargs )
         self.fields['proveedor_id'].empty_label = None
         self.fields['recursos_id'].queryset = Recurso.objects.filter( visible='si' )
+        # if user.groups.all()[0].name == "SuperAdmins": Este valor es para instalación propia no en municipio
+        if user.groups.all()[0].name == "superadmin":
+            self.fields['vehiculo_id'].queryset = Vehiculo.objects.filter( visible='si')
+        else:
+            self.fields['vehiculo_id'].queryset = Vehiculo.objects.filter(visible='si',departamento_id=user.departamento_id.id)
 
     class Meta:
         model = Requisicion
@@ -609,6 +615,7 @@ class VehiculoForm(forms.ModelForm):
             ),
         }
 class ProductosForm(forms.Form):
+
     productos = forms.ModelChoiceField(queryset=Producto.objects.all() , widget=forms.Select(attrs={
         'class': 'form-control'
     }))

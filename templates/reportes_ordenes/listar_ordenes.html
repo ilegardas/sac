@@ -80,6 +80,7 @@
                         <th scope="col">Fechas de Creacion</th>
                         <th scope="col">Departamento</th>
                         <th scope="col">Aprobador</th>
+                        <th scope="col">Proveedor</th>
                         <th scope="col">Producto</th>
                         <th scope="col">Recursos</th>
                         <th scope="col">Descripcion</th>
@@ -117,6 +118,14 @@
                                 <option value="todos">Todos</option>
                                 {% for persona in personas %}
                                     <option value="{{ persona.id }}">{{ persona.nombres }}</option>
+                                {% endfor %}
+                            </select>
+                      </td>
+                      <td>
+                            <select name="proveedor_id" class="form-select form-select-sm">
+                                <option value="todos">Todos</option>
+                                {% for proveedor in proveedores %}
+                                    <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
                                 {% endfor %}
                             </select>
                       </td>
@@ -198,7 +207,7 @@
                                 <td>
                                     {% for producto in orden.requerimiento_id.producto_id.all %} {{producto.nombre}}, {% endfor %}
                                 </td>
-                                <td>{% if orden.requerimiento_id.vehiculo_id is not None %} {{ orden.requerimiento_id.vehiculo_id }} {% endif %}</td>
+                                <td>{% if orden.requerimiento_id.vehiculo_id is not None %} {{ orden.requerimiento_id.vehiculo_id }}  {% endif %}</td>
                                 <td>{{ orden.cantidad_prod }}</td>
                                 <td>{{ orden.precio_unitario }}</td>
                                 <td>{{ orden.precio_total }}</td>

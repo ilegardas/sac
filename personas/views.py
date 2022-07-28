@@ -529,7 +529,12 @@ def CrearRequisicion(request):
             vehiculo = Vehiculo.objects.get(id=request.POST.get('vehiculos'))
         else:
             vehiculo = None
-        departamento = usuario.departamento_id
+
+        if (request.POST.get('departamentos') == ""):
+            departamento = usuario.departamento_id
+        else:
+            departamento = Departamento.objects.get( id=request.POST.get( 'departamentos' ) )
+
         persona = request.user
         recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
         proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
@@ -582,10 +587,17 @@ def CrearRequisicion(request):
         #SE REDIRECCIONA A LA LISTA DE REQUERIMIENTOS DEL USUARIO
         return redirect('listar_requisiciones')
     else:
-        requisicion_form = RequisicionForm()
+        requisicion_form = RequisicionForm(user=request.user)
         catalogos_form = ProductosForm()
+        departamentos = Departamento.objects.all()
 
-    return render(request, 'requisiciones/crear_requisicion.html',{'requisicion_form': requisicion_form,'usuario':usuario,'catalogos_form':catalogos_form})
+        #if request.user.groups.all()[0].name == "SuperAdmins": este nombre solo esta en esta  lap
+        if request.user.groups.all()[0].name == "superadmin":
+            vehiculos = Vehiculo.objects.filter( visible='si' )
+        else:
+            vehiculos = Vehiculo.objects.filter(visible='si',departamento_id=request.user.departamento_id.id)
+        grupo = request.user.groups.all()[0].name
+    return render(request, 'requisiciones/crear_requisicion.html',{'requisicion_form': requisicion_form,'usuario':usuario,'catalogos_form':catalogos_form,'vehiculos':vehiculos, 'departamentos':departamentos, 'grupo':grupo})
 @login_required
 def ListarRequisiciones(request):
 
@@ -605,18 +617,29 @@ def EditarRequisicion(request, id):
 
 
         if request.method == 'GET':
-            requisicion_form = RequisicionForm(instance=requisicion)
+            requisicion_form = RequisicionForm(instance=requisicion, user=request.user)
+            departamentos = Departamento.objects.all()
+            grupo = request.user.groups.all()[0].name
+            departamento = requisicion.departamento_id.id
         else:
             producto = None
-            requisicion_form = RequisicionForm(request.POST, instance=requisicion)
+            requisicion_form = RequisicionForm(request.POST, instance=requisicion, user=request.user)
             requisicion = Requisicion.objects.get(id=requisicion.id)
             requisicion.descripcion = request.POST.get('descripcion')
             requisicion.recursos_id = Recurso.objects.get(id=request.POST.get('recursos_id'))
             requisicion.proveedor_id = Proveedor.objects.get( id=request.POST.get( 'proveedor_id' ) )
+
+            if (request.POST.get( 'departamentos' ) != ""):
+                requisicion.departamento_id = Departamento.objects.get( id=request.POST.get( 'departamentos' ) )
+
             #requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
-            if (request.POST.get( 'vehiculo_id' ) is not None):
-                print(request.POST.get( 'vehiculo_id' ))
-                requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
+
+            if (request.POST.get( 'vehiculo_id' ) is not None) :
+
+                if (request.POST.get( 'vehiculo_id' ) == ""):
+                    requisicion.vehiculo_id = None
+                else:
+                    requisicion.vehiculo_id = Vehiculo.objects.get( id=request.POST.get( 'vehiculo_id' ) )
             else:
                 vehiculo = None
             requisicion.save()
@@ -646,7 +669,7 @@ def EditarRequisicion(request, id):
     except ObjectDoesNotExist as e:
         error=e
 
-    return render(request, 'requisiciones/crear_requisicion_backup.html', {'requisicion_form': requisicion_form,'error':error,'usuario':usuario, 'requisicion':requisicion})
+    return render(request, 'requisiciones/crear_requisicion_backup.html', {'requisicion_form': requisicion_form,'error':error,'usuario':usuario, 'requisicion':requisicion,'departamentos':departamentos, 'grupo':grupo, 'departamento_actual':departamento})
 @login_required
 def EliminarRequisicion(request,id):
     if request.user.has_perm("personas.delete_requisicion") == False:
@@ -1185,6 +1208,7 @@ def ReporteOrdenes(request):
     personas = Usuario.objects.all()
     productos = Producto.objects.all()
     recursos = Recurso.objects.all()
+    proveedores = Proveedor.objects.all()
 
     if request.method == 'GET':
         ReporteOrden_form = ReporteOrdenesForm( instance=orden )
@@ -1196,7 +1220,8 @@ def ReporteOrdenes(request):
                         'personas':personas,
                         'departamentos':departamentos,
                         'productos': productos,
-                        'recursos':recursos} )
+                        'recursos':recursos,
+                        'proveedores':proveedores} )
     else:
 
         fecha_creacion = request.POST.get( 'fecha_creacion',None)
@@ -1207,7 +1232,7 @@ def ReporteOrdenes(request):
         #producto = request.POST.get( 'producto_id' )
         recurso = request.POST.get( 'recurso_id' )
         usuario = request.POST.get( 'aprobador_id' )
-
+        proveedor = request.POST.get( 'proveedor_id' )
         estatus = request.POST.get( 'estatus' )
         if len(fecha_creacion) > 2:
 
@@ -1234,6 +1259,9 @@ def ReporteOrdenes(request):
             Query = Query.filter( aprobador_id=usuario)
         if estatus != 'todos':
             Query = Query.filter(estatus=estatus)
+        if proveedor != 'todos':
+            Query = Query.filter(proveedor_id=proveedor)
+
 
         Query = Query.order_by( '-pk' )
         ordenes = Query
@@ -1248,7 +1276,8 @@ def ReporteOrdenes(request):
                         'personas':personas,
                         'departamentos':departamentos,
                         'productos': productos,
-                        'recursos':recursos
+                        'recursos':recursos,
+                        'proveedores': proveedores
                         } )
 @login_required
 def ReporteCompras(request):

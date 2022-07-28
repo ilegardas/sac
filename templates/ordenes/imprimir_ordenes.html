@@ -124,6 +124,7 @@
                                   {% for producto in orden.requerimiento_id.producto_id.all %}
                                     {{producto.nombre}},
                                   {% endfor %}
+                                  {% if orden.requerimiento_id.vehiculo_id is not None %} Vehiculo: {{ orden.requerimiento_id.vehiculo_id }} {% endif %}
                               </th>
                               <th>${{ orden.precio_unitario }}</th>
                               <th>${{ orden.precio_total }}</th>

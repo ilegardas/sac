@@ -190,7 +190,7 @@
                                 <td>
                                 {% for producto in requisicion.producto_id.all %} {{producto.nombre}}, {% endfor %}
                                 </td>
-                                <td>{% if requisicion.vehiculo_id is not None %} {{ requisicion.vehiculo_id }} {% endif %}</td>
+                                <td>{% if requisicion.vehiculo_id is not None %} {{ requisicion.vehiculo_id }}  {% endif %}</td>
                                 <td>{{ requisicion.recursos_id }}</td>
                                 <td>{{ requisicion.descripcion }}</td>
                                 <td>{{ requisicion.fecha_creacion }}</td>

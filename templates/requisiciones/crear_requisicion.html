@@ -32,43 +32,90 @@
             <p class="mb-4">Esta sección es para agregar los requerimientos de Compra.</p>
 
             <form method="POST">
-        {% csrf_token %}
-        {% if error %}
-            <h2>Se produjo un error: {{ error }}</h2>
-        {% else %}
-             <label >Por favor selecciona el recurso:</label>
-            {{ requisicion_form.recursos_id }}
-            <label >Producto (Seleccione el producto que necesita)</label>
-            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_producto' %}">AQUI</a></label>
-            {{ catalogos_form.productos }}
+                {% csrf_token %}
+                {% if error %}
+                    <h2>Se produjo un error: {{ error }}</h2>
+                {% else %}
+                    {% if grupo == 'superadmin' %}
 
-            <div id="admDivCheck" style="display:none;">
-                <label >Por favor indique a que vehículo se le asignará la requisición.
-                    <a href="{% url 'crear_vehiculo' %}">Agregar Vehiculo</a></label>
-                {{ catalogos_form.vehiculos }}
-            </div>
-            <label >Proveedor (Seleccione el proveedor)</label>
-            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
-            {{ requisicion_form.proveedor_id }}
+                        <div class="row g-3 entradas" >
+                            <div class="col-auto">
+                                <label >Seleccione el <strong>departamento</strong> al que se le crea la requisicion.</label>
+                                <select name="departamentos" class="form-select form-select-sm">
+                                    {% for departamento in departamentos %}
+                                        <option value="{{ departamento.id }}">{{ departamento.nombre }}</option>
+                                    {% endfor %}
+                                </select>
 
-            <label >Descripcion (Por favor detalle el motivo de la compra)</label>
-            {{ requisicion_form.descripcion }}
-            <br>
-            <button class="btn btn-primary" type="reset">Limpiar</button>
-            <button class="btn btn-primary" type="submit"> Guardar</button>
-        {% endif  %}
-    </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <input type="hidden" name="departamentos" value="">
+                    {% endif  %}
+                    <div class="row g-3 entradas" >
+                        <div class="col-auto">
+                         <label >Por favor selecciona el recurso:</label>
+                        {{ requisicion_form.recursos_id }}
+                        </div>
+
+                        <div class="col-auto">
+                        <label >Producto </label>
+                        <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_producto' %}">AQUI</a></label>
+                        {{ catalogos_form.productos }}
+                        </div>
+
+                        <div class="col-auto">
+                            <div id="admDivCheck" style="display:none;" class="col-auto">
+                                <label >Por favor indique a que vehículo se le asignará la requisición.
+                                    <a href="{% url 'crear_vehiculo' %}">Agregar Vehiculo</a></label>
+
+                                <select name="vehiculos" class="form-select form-select-sm">
+                                    <option value=""></option>
+                                    {% for vehiculo in vehiculos %}
+                                        <option value="{{ vehiculo.id }}">{{ vehiculo.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3 entradas">
+                        <div class="col-auto>"
+                            <label >Proveedor:</label>
+                            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
+                            {{ requisicion_form.proveedor_id }}
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin: 1em; padding: 1em; border-radius: 4px; ">
+                        <div class="col"
+                            <label >Descripcion (Por favor detalle el motivo de la compra)</label>
+                            {{ requisicion_form.descripcion }}
+                        </div>
+                        <br>
+                    </div>
+                     <div class="row" style="margin: 1em; padding: 1em; border-radius: 4px; ">
+                        <div class="col-autp"
+                            <button class="btn btn-primary" type="reset">Limpiar</button>
+                            <button class="btn btn-primary" type="submit"> Guardar</button>
+                        </div>
+                        <br>
+                    </div>
+
+
+                {% endif  %}
+    </div>
     <script>
         $(function () {
             $('select[name="productos"]').on('change',function () {
                 var id = $(this).val();
-
-
                 if((id == 3) || (id == 5) || (id == 13) || (id == 19) || (id == 21)){
                     document.getElementById("admDivCheck").style.display = "block";
                 }
                 else{
                     document.getElementById("admDivCheck").style.display = "none";
+                    $('select[name="vehiculos"]').val("");
                 }
 
                 });

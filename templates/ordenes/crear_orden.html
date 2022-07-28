@@ -12,15 +12,18 @@
     Convertir requisicion a orden de compra
 {%endblock pagename %}
 
+
+
 {% block body %}
 <div class="card o-hidden border-0 shadow-lg my-5" >
     <div class="card-body p-0" >
-        <div class="container-fluid">
+        <div class="container-fluid" align="center">
             <br>
             <h1 class="h3 mb-2 text-gray-800">Formulario para convertir Requisiciones a Ordenes</h1>
             <p class="mb-4">Usted ah seleccionado un requerimiento de compra para procesarlo como una orden de compra.</p>
 
-            <div align="center"  class="card border-primary mb-3" style="max-width: 90%;">
+            <div   class="card border-primary mb-3" style="max-width: 100%;">
+
               <div class="card-header">Requisicion No: <strong>{{ requisicion.id }}</strong></div>
               <div class="card-body text-primary">
                   <h5 class="card-title">Concepto: <strong>{{  requisicion.concepto }} </strong> </h5>
@@ -39,32 +42,48 @@
             {% if error %}
                 <h2>Se produjo un error: {{ error }}</h2>
             {% else %}
-                <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
-                <select name="recursos_id" class="form-select form-select-sm">
-                        <option value={{ requisicion.recursos_id.id }}>{{ requisicion.recursos_id.nombre }}</option>
-                        {% for recurso in recursos %}
-                            <option value="{{ recurso.id }}">{{ recurso.nombre }}</option>
-                        {% endfor %}
-                </select>
+                <div class="row g-3 entradas">
+                    <div class="col-auto">
+                        <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
+                        <select name="recursos_id" class="form-select form-select-sm">
+                                <option value={{ requisicion.recursos_id.id }}>{{ requisicion.recursos_id.nombre }}</option>
+                                {% for recurso in recursos %}
+                                    <option value="{{ recurso.id }}">{{ recurso.nombre }}</option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-                <label >Proveedor </label>
-                <label >Si no se encuentra puede agregarlo <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
-                <select name="proveedor_id" class="form-select " >
-                                    <option value={{ requisicion.proveedor_id.id }}>{{ requisicion.proveedor_id.nombre }}</option>
-                                    {% for proveedor in proveedores %}
-                                        <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
-                                    {% endfor %}
-                </select>
-                <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
-                {{ orden_form.cantidad_prod }}
-                <label >Indique el precio unitario</label>
-                {{ orden_form.precio_unitario }}
-                <label >Indique el precio total</label>
-                {{ orden_form.precio_total }}
+                <div class="row g-3 entradas">
+                    <div class="col-auto">
+                        <label >Proveedor </label>
+                        <label >Si no se encuentra puede agregarlo <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
+                        <select name="proveedor_id" class="form-select " >
+                                            <option value={{ requisicion.proveedor_id.id }}>{{ requisicion.proveedor_id.nombre }}</option>
+                                            {% for proveedor in proveedores %}
+                                                <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
+                                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
+                 <div class="row g-3 entradas">
+                    <div class="col-auto">
+                        <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
+                        {{ orden_form.cantidad_prod }}
+                        <label >Indique el precio unitario</label>
+                        {{ orden_form.precio_unitario }}
+                        <label >Indique el precio total</label>
+                        {{ orden_form.precio_total }}
+                    </div>
+                 </div>
                 <br>
-                <button class="btn btn-primary" type="reset">Limpiar</button>
-                <button class="btn btn-primary" type="submit"> Guardar</button>
+                 <div class="row g-3 ">
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="reset">Limpiar</button>
+                        <button class="btn btn-primary" type="submit"> Guardar</button>
+                    </div>
+                 </div>
             {% endif  %}
     </form>
 {% endblock body %}

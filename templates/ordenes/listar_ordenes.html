@@ -149,7 +149,7 @@
                                 <td>{{ requisicion.id }}</td>
                                 <td>{{ requisicion.departamento_id }}</td>
                                 <td>
-                                {% for producto in requisicion.producto_id.all %} {{producto.nombre}}, {% endfor %}  {% if requisicion.vehiculo_id is not None %} Para:{{ requisicion.vehiculo_id }} {% endif %}
+                                {% for producto in requisicion.producto_id.all %} {{producto.nombre}}, {% endfor %}  {% if requisicion.vehiculo_id is not None %} Para:{{ requisicion.vehiculo_id }} Num Econ: {{ requisicion.vehiculo_id.num_economico }} {% endif %}
                                 </td>
                                 <td>{{ requisicion.proveedor_id }}</td>
                                 <td>{{ requisicion.persona_id }}</td>

@@ -75,11 +75,39 @@
                 } );
             });
         </script>
-    {% block vehiculo %}
+{% block vehiculo %}
 
-    {% endblock vehiculo %}
+{% endblock vehiculo %}
+
 {%endblock header %}
-
+<style>
+    .entradas{
+            margin: 1em;
+            padding: 1em;
+            border-radius: 4px;
+            color: #FFFFFF;
+            background: linear-gradient(#286EB6, #1B66B1);
+            box-shadow: 4px 6px 8px 0px rgba(188, 188, 188, .8);
+    }
+    .entradas:hover{
+        margin: 1em;
+        padding: 1em;
+        border-radius: 4px;
+        color: #FFFFFF;
+        background: linear-gradient(#286EB6, #4A1672  );
+        box-shadow: 4px 6px 8px 0px rgba(188, 188, 188, .8);
+        -webkit-transition: .9s all;
+        -webkit-transition-delay: 9s;
+        -moz-transition: .9s all;
+        -moz-transition-delay: 9s;
+        -ms-transition: .9s all;
+        -ms-transition-delay: 9s;
+        -o-transition: .9s all;
+        -o-transition-delay: 9s;
+        transition: .9s all;
+        transition-delay: 9s;
+    }
+</style>
 </head>
 
 <body id="page-top">
