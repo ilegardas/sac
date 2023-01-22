@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'sac',
     'import_export',
     'ckeditor',
+    'dspm',
 ]
 
 MIDDLEWARE = [
