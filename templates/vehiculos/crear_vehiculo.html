@@ -1,0 +1,37 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Alta de Vehículo
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+
+{% block pagename %}
+    Alta de Vehiculos
+{%endblock pagename %}
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Vehículos</h1>
+            <p class="mb-4">Esta seccion es para agregar los vehículos de la empresa.</p>
+            <form method="POST">
+                {% csrf_token %}
+                {% if error %}
+                    <h2>Se produjo un error: {{ error }}</h2>
+                {% else %}
+                    {{vehiculo_form.as_p }}
+                    <button type="reset" class="btn btn-primary btn-user btn-block">Limpiar</button>
+                    <button type="submit" class="btn btn-primary btn-user btn-block"> Guardar</button>
+                    <br>
+                {% endif  %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

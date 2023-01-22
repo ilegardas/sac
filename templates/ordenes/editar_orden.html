@@ -1,0 +1,74 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Creacion de Ordenes de Compra
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Convertir requisicion a orden de compra
+{%endblock pagename %}
+
+
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" align="center">
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para Editar la Orden de Compra</h1>
+            <p class="mb-4">Usted ha seleccionado una orden de compra editarla</p>
+
+            <div align="center"  class="card border-primary mb-3" style="max-width: 100%;">
+              <div class="card-header">Orden No: <strong>{{ orden.id }}</strong></div>
+              <div class="card-body text-primary">
+
+                    <p class="card-text">Descripción: <strong> {{  orden.descripcion }} </strong> </p>
+                    <p class="card-text">Producto: <strong>
+                    {% for producto in orden.requerimiento_id.producto_id.all %}
+                                    {{producto.nombre}},
+                    {% endfor %}
+                    </strong> </p>
+              </div>
+            </div>
+
+
+            <form method="POST">
+        {% csrf_token %}
+        {% if error %}
+            <h2>Se produjo un error: {{ error }}</h2>
+        {% else %}
+            <div class="row g-3 entradas">
+                <div class="col-auto">
+                    <label >Recursos (Seleccione el origen de los recursos para la compra)</label>
+                    {{ ordenc_form.recursos_id }}
+                </div>
+            </div>
+
+            <div class="row g-3 entradas">
+                <div class="col-auto">
+                    <label >Proveedor (Seleccione el proveedor donde se va a comprar)</label>
+                    <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_proveedor' %}">AQUI</a></label>
+                    {{ ordenc_form.proveedor_id }}
+                </div>
+            </div>
+            <div class="row g-3 entradas">
+                <div class="col-auto">
+                    <label >Indique la cantidad de producto aprobado (NA) si no aplica</label>
+                    {{ ordenc_form.cantidad_prod }}
+                    <label >Indique el precio unitario</label>
+                    {{ ordenc_form.precio_unitario }}
+                    <label >Indique el precio total</label>
+                    {{ ordenc_form.precio_total }}
+                </div>
+            </div>
+            <label >Descripcion (Añada un texto para que pueda identificar la orden de compra)</label>
+            {{ ordenc_form.descripcion }}
+            <br>
+            <button class="btn btn-primary" type="reset">Limpiar</button>
+            <button class="btn btn-primary" type="submit"> Guardar</button>
+        {% endif  %}
+    </form>
+{% endblock body %}

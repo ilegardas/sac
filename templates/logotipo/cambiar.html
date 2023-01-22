@@ -1,0 +1,51 @@
+
+
+{% extends 'tables.html' %}
+{% load static %}
+
+{% block tittle%}
+    Inicio de SAC
+{% endblock tittle%}
+
+{%block usuario%}
+    {{user.nombres}} {{user.apellidos}}
+{%endblock usuario%}
+
+{% block pagename %}
+    Inicio
+{%endblock pagename %}
+
+{% block body %}
+
+<div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Actualización de Logotipo</h1>
+                    </div>
+
+                    <div class="row" >
+                        <label> Seleccione el archivo a subir para el formato de ordenes de compra, en formato PNG (sugerido 400x400px) </label>
+                        <!-- Earnings (Monthly) Card Example -->
+                        <div class="col-xl-9 col-md-12 mb-9" align="center">
+                             <form method="POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                {% if error %}
+                                    <h2>Se produjo un error: {{ error }}</h2>
+                                {% else %}
+
+                                    {{ form_logo }}
+                                    <br>
+                                    <br>
+                                    <button type="reset" class="btn btn-primary btn-user btn-block">Limpiar</button> <button type="submit" class="btn btn-primary btn-user btn-block"> Subir</button>
+                                {% endif  %}
+                            </form>
+                        </div>
+
+
+                    </div>
+
+</div>
+                <!-- /.container-fluid -->
+
+{% endblock body %}

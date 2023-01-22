@@ -1,0 +1,162 @@
+{% extends 'tables.html' %}
+{% load static %}
+{% block tittle%}
+    Listado de Ventas
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+{% block reportes %}
+    <script></script>
+{% endblock reportes %}
+{%block header %}
+
+     <link rel="stylesheet" type="text/css" media="all" href="{%  static 'lib/daterangepicker-master/daterangepicker.css' %}" />
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+
+      <script type="text/javascript" src="{%  static 'lib/daterangepicker-master/daterangepicker.js' %} "></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <link rel="stylesheet" href="{%  static 'reportes/js/reportes.js' %}" />
+    <!--  DATA TABLE OPTIONS-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.11.3/datatables.min.js"></script>
+
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css" />
+
+
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.print.min.js"></script>
+    <script>
+    $(function() {
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                responsive: true,
+                destroy: true,
+                ordering: false,
+                searching:true,
+                info: false,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Excel <i class="fas fa-file-excel"></i>',
+                        titleAttr: 'Excel',
+                        className: 'btn btn-sucess bnt-flat btn-xs'
+                    },
+                    'copy', 'print'
+                ]
+            });
+        } );
+    });
+    </script>
+
+{%endblock header %}
+{% block pagename %}
+    Listado de Ventas
+{%endblock pagename %}
+
+{% block body %}
+    <div class="container">
+            {% if messages %}
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+                  <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+                  <div>
+                    <ul class="messages">
+                        {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                  </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="container-fluid">
+            <h1 class="h3 mb-2 text-gray-800">Listado de Ventas</h1>
+            <p class="mb-4"></p>
+
+
+            <a href="{% url 'crear_venta' %}" type="button" class="btn btn-outline-success btn-sm">Capturar Venta</a>
+        </div>
+    {% if ventas %}
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm" style="background-color: #E5E8E8 ;"id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr >
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Concepto Venta</th>
+                            <th>Total</th>
+                            <th>Fecha de Venta</th>
+                            <th >Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                            <tr>
+                                <td>{{ venta.id }}</td>
+                                <td>{{ venta.cliente }}</td>
+                                <td>
+                                {% for concepto in venta.concepto_id.all %}
+                                    {% for detalle in detalles %}
+                                        {% if detalle.concepto_id.id == concepto.id and detalle.venta_id.id == venta.id   %}
+                                            {{ detalle.concepto_id.nombre }} ({{ detalle.cantidad }} * ${{ detalle.precio_unitario }})
+                                        {% endif %}
+                                    {% endfor %}<br>
+                                {% endfor %}
+                                </td>
+                                <td>${{ venta.monto }}</td>
+                                <td>{{ venta.fecha_creacion }}</td>
+
+
+                                <td>
+
+                                    <a  href="javascript:ventanaSecundaria('{% url 'imprimir-venta' venta.id %}')">
+                                                <img class="btn-light" title="Imprimir Venta" style="box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); padding: 5px; border-radius: 10%;" width="25" height="25" src="{% static 'img/printer.png' %}"  alt="Generar Venta para Imprimir">
+                                    </a>
+
+                                    {% if perms.personas.change_venta %}
+                                        <a href="{% url 'delistar_venta' venta.id %}">
+                                             <img class="btn-warning" title="Ocultar Venta" style="box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); padding: 5px; border-radius: 10%;" width="25" height="25" src="{% static 'img/hide.png' %}" class="img-thumbnail" alt="Ocultar esta Venta">
+                                        </a>
+                                    {% endif %}
+                                    {% if perms.personas.delete_venta %}
+                                    <a href="{% url 'eliminar_venta' venta.id%}"  >
+
+                                        <img class="btn-danger" title="Eliminar Venta" width="25" style="box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); padding: 5px; border-radius: 20%;" height="25" src="{% static 'img/trash.png' %}" class="img-thumbnail" alt="Eliminar la venta">
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                     <script>
+                        function ventanaSecundaria (URL){
+                           window.open(URL,"ventana1","width=400,height=600,scrollbars=NO")
+                        }
+                        </script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div align="center">
+            <h1>No existen requerimientos registrados actualmente</h1>
+        </div>
+    {% endif %}
+{% endblock body %}

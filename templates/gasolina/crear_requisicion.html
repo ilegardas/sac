@@ -1,0 +1,74 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+    Alta de Requisiciones
+{% endblock tittle%}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block pagename %}
+    Agregar de Requisición de Compra
+{%endblock pagename %}
+{% block vehiculo %}
+<style>
+    .divvehiculo{
+        display: none;
+
+    }
+    .divvehiculo2{
+
+
+    }
+</style>
+{% endblock vehiculo %}
+{% block body %}
+<div class="card o-hidden border-0 shadow-lg my-5" >
+    <div class="card-body p-0" >
+        <div class="container-fluid">
+            <br>
+            <h1 class="h3 mb-2 text-gray-800">Formulario para agregar/editar Requisiciones</h1>
+            <p class="mb-4">Esta seccion es para agregar los requerimientos de Compra.</p>
+
+            <form method="POST">
+        {% csrf_token %}
+        {% if error %}
+            <h2>Se produjo un error: {{ error }}</h2>
+        {% else %}
+             <label >Por favor selecciona el recurso:</label>
+            {{ requisicion_form.recursos_id }}
+            <label >Producto (Seleccione el producto que necesita)</label>
+            <label >Si no se encuentra puede darlo de alta <a href="{% url 'crear_producto' %}">AQUI</a></label>
+            {{ catalogos_form.productos }}
+
+            <div id="admDivCheck" style="display:none;">
+                <label >Ha seleccionado combustible por favor indique a que vehiculo se le pondrá.
+                    <a href="{% url 'crear_vehiculo' %}">Agregar Vehiculo</a></label>
+                {{ catalogos_form.vehiculos }}
+            </div>
+                <label >Descripcion (Por favor detalle el motivo de la compra)</label>
+            {{ requisicion_form.descripcion }}
+            <br>
+            <button class="btn btn-primary" type="reset">Limpiar</button>
+            <button class="btn btn-primary" type="submit"> Guardar</button>
+        {% endif  %}
+    </form>
+    <script>
+        $(function () {
+            $('select[name="productos"]').on('change',function () {
+                var id = $(this).val();
+
+
+                if(id == 3){
+                    document.getElementById("admDivCheck").style.display = "block";
+                }
+                else{
+                    document.getElementById("admDivCheck").style.display = "none";
+                }
+
+                });
+
+        });
+    </script>
+{% endblock body %}

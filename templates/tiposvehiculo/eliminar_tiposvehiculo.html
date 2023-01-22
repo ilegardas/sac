@@ -1,0 +1,22 @@
+{% extends 'tables.html' %}
+
+{% block tittle%}
+     Eliminar Tipo de Vehiculo
+{% endblock tittle%}
+
+{% block pagename %}
+    Eliminar Tipo Vehiculo
+{%endblock pagename %}
+
+{%block usuario %}
+    {{ user.nombres }} {{ user.apellidos }}
+{%endblock usuario %}
+
+{% block body %}
+    <form method="POST">
+        {% csrf_token %}
+        <h2>¿Desea eliminar el Tipo: {{ tiposvehiculo.nombre }} ?</h2>
+        <button type="submit" class="btn btn-google btn-user btn-block"> Eliminar</button>
+        <a href="{% url 'listar_tiposvehiculos' %}" class="btn btn-primary btn-user btn-block">Cancelar</a>
+    </form>
+{% endblock body %}
